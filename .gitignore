@@ -1,0 +1,9 @@
+# Segredos (chaves de API) - NUNCA enviar
+.env
+.env.*
+
+# Bibliotecas baixadas
+node_modules/
+
+# Configuração local da Vercel
+.vercel/
