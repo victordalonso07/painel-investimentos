@@ -16,6 +16,18 @@
 
   <header class="topo">
     <h1>Painel de Investimentos</h1>
+    <!-- Menu de navegação: no PC fica no topo; no celular, barra fixa embaixo -->
+    <nav class="menu" aria-label="Menu principal">
+      <!-- Lista de links: cada <li> é um item do menu -->
+      <ul>
+        <!-- aria-current="page" marca a página atual (o CSS destaca) -->
+        <li><a href="index.html" aria-current="page">Início</a></li>
+        <!-- Ainda não existe: vai dar erro 404 até criarmos a página -->
+        <li><a href="carteira.html">Carteira</a></li>
+        <!-- Ainda não existe: vai dar erro 404 até criarmos a página -->
+        <li><a href="observacao.html">Observação</a></li>
+      </ul>
+    </nav>
     <div class="topo-acoes">
       <p class="atualizado">Atualizado às <time>10:30</time></p>
       <button type="button" class="botao-tema" id="botao-tema" aria-pressed="false">

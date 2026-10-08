@@ -150,6 +150,55 @@ main {
 }
 
 /* =========================================================
+   3a. MENU DE NAVEGAÇÃO
+   Celular: barra fixa embaixo, como em apps de banco.
+   PC (bloco 10): volta para o topo, ao lado do título.
+   ========================================================= */
+.menu {
+  position: fixed;               /* fica parado na tela, mesmo rolando */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;                   /* fica por cima do conteúdo */
+  background: var(--superficie);
+  border-top: 1px solid var(--linha);
+  padding-bottom: env(safe-area-inset-bottom); /* respeita a "barrinha" do iPhone */
+}
+
+.menu ul {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* três itens do mesmo tamanho */
+}
+
+.menu a {
+  display: block;
+  padding: 0.9rem 0.5rem;        /* área de toque confortável para o dedo */
+  text-align: center;
+  color: var(--tinta-suave);
+  text-decoration: none;         /* tira o sublinhado padrão dos links */
+  font-weight: 700;
+  border-top: 3px solid transparent;
+  transition: color var(--transicao), background-color var(--transicao),
+              border-color var(--transicao);
+}
+
+.menu a:hover {
+  color: var(--laranja);
+  background: var(--laranja-fundo);
+}
+
+/* Página atual: texto e barra em laranja */
+.menu a[aria-current="page"] {
+  color: var(--laranja);
+  border-top-color: var(--laranja);
+}
+
+/* Espaço no fim da página para o conteúdo não ficar escondido atrás da barra */
+body {
+  padding-bottom: 4.5rem;
+}
+
+/* =========================================================
    3b. BOTÃO DE TEMA
    ========================================================= */
 .botao-tema {
@@ -376,6 +425,33 @@ main {
    10. TELAS MÉDIAS (a partir de 720px)
    ========================================================= */
 @media (min-width: 45rem) {
+  /* Menu volta para o topo, entre o título e o botão de tema */
+  .menu {
+    position: static;            /* deixa de ser fixo: volta ao fluxo normal */
+    background: transparent;
+    border-top: none;
+    padding-bottom: 0;
+  }
+
+  .menu ul {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .menu a {
+    padding: 0.4rem 0.9rem;
+    border-top: none;
+    border-radius: 999px;        /* formato de pílula, como o botão de tema */
+  }
+
+  .menu a[aria-current="page"] {
+    background: var(--laranja-fundo);
+  }
+
+  body {
+    padding-bottom: 0;           /* sem barra embaixo, não precisa do espaço */
+  }
+
   main {
     grid-template-columns: 2fr 1fr;
   }
