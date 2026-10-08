@@ -20,6 +20,7 @@
 
   --laranja: #C2410C;        /* cor de interação: hover, foco, botão */
   --laranja-fundo: #FFEDD5;  /* laranja bem claro, para fundos no hover */
+  --botao-tema: #14213D;     /* botão de tema no claro: azul-marinho, como o resumo */
 
   --fonte: "Atkinson Hyperlegible", system-ui, sans-serif;
   --espaco: 1rem;            /* unidade base de espaçamento */
@@ -52,6 +53,7 @@
 
   --laranja: #FB923C;        /* laranja mais claro: contraste bom no preto */
   --laranja-fundo: #2A1608;
+  --botao-tema: #FB923C;     /* botão de tema no escuro: laranja */
 
   color-scheme: dark;
 }
@@ -69,6 +71,7 @@
     --baixa: #F87171;
     --laranja: #FB923C;
     --laranja-fundo: #2A1608;
+    --botao-tema: #FB923C;
     color-scheme: dark;
   }
 }
@@ -153,9 +156,9 @@ main {
   font: inherit;               /* botões não herdam a fonte sozinhos */
   font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--laranja);
+  color: var(--botao-tema);
   background: transparent;
-  border: 2px solid var(--laranja);
+  border: 2px solid var(--botao-tema);
   border-radius: 999px;        /* formato de pílula */
   padding: 0.35rem 0.9rem;
   cursor: pointer;
@@ -163,7 +166,7 @@ main {
 }
 
 .botao-tema:hover {
-  background: var(--laranja);
+  background: var(--botao-tema);
   color: var(--fundo);
 }
 
