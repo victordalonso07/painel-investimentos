@@ -156,18 +156,32 @@ main {
   font: inherit;               /* botões não herdam a fonte sozinhos */
   font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--botao-tema);
-  background: transparent;
+  color: var(--fundo);             /* texto na cor do fundo da página: contraste */
+  background: var(--botao-tema);   /* preenchido com a cor principal */
   border: 2px solid var(--botao-tema);
   border-radius: 999px;        /* formato de pílula */
   padding: 0.35rem 0.9rem;
   cursor: pointer;
-  transition: background-color var(--transicao), color var(--transicao);
+  transition: opacity var(--transicao), filter var(--transicao);
 }
 
+/* Hover no claro: a mesma cor, mais transparente (80% visível) */
 .botao-tema:hover {
-  background: var(--botao-tema);
-  color: var(--fundo);
+  opacity: 0.8;
+}
+
+/* Hover no escuro: em vez de transparência (que escureceria no fundo preto),
+   o botão "acende" com 15% mais brilho */
+:root[data-tema="escuro"] .botao-tema:hover {
+  opacity: 1;
+  filter: brightness(1.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .botao-tema:hover {
+    opacity: 1;
+    filter: brightness(1.15);
+  }
 }
 
 /* =========================================================
