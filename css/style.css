@@ -1,24 +1,80 @@
 /* =========================================================
-   1. VARIÁVEIS
-   Cores e medidas definidas uma vez só. Para mudar o tema,
-   basta mudar aqui que o site inteiro acompanha.
+   1. VARIÁVEIS — MODO CLARO (padrão)
+   Cores e medidas definidas uma vez só. O modo escuro
+   (bloco 1b) só troca os valores destas mesmas variáveis.
    ========================================================= */
 :root {
-  --fundo: #EEF2F0;        /* papel: cinza-esverdeado claro */
-  --tinta: #14213D;        /* texto principal: azul-marinho */
-  --tinta-suave: #556070;  /* textos secundários */
-  --linha: #C9D3CF;        /* divisórias */
-  --alta: #1B7F4B;         /* verde: só para valores positivos */
-  --baixa: #B3261E;        /* vermelho: só para valores negativos */
+  --fundo: #EEF2F0;          /* papel: cinza-esverdeado claro */
+  --superficie: #FFFFFF;     /* fundo dos cartões */
+  --tinta: #14213D;          /* texto principal: azul-marinho */
+  --tinta-suave: #556070;    /* textos secundários */
+  --linha: #C9D3CF;          /* divisórias */
+
+  --bloco-resumo: #14213D;   /* fundo do resumo */
+  --texto-resumo: #F4F7F6;
+
+  --alta: #15803D;           /* verde: só para valores positivos */
+  --baixa: #C81E1E;          /* vermelho: só para valores negativos */
+  --alta-resumo: #6EE7A0;    /* verde e vermelho mais claros, para o fundo escuro do resumo */
+  --baixa-resumo: #FCA5A5;
+
+  --laranja: #C2410C;        /* cor de interação: hover, foco, botão */
+  --laranja-fundo: #FFEDD5;  /* laranja bem claro, para fundos no hover */
 
   --fonte: "Atkinson Hyperlegible", system-ui, sans-serif;
-  --espaco: 1rem;          /* unidade base de espaçamento */
-  --largura-max: 64rem;    /* largura máxima do conteúdo em telas grandes */
+  --espaco: 1rem;            /* unidade base de espaçamento */
+  --largura-max: 64rem;      /* largura máxima do conteúdo em telas grandes */
+  --transicao: 200ms ease;   /* duração das animações de cor */
+
+  color-scheme: light;       /* barras de rolagem e campos no padrão claro */
+}
+
+/* =========================================================
+   1b. VARIÁVEIS — MODO ESCURO
+   Vale em dois casos:
+   - o botão escolheu "escuro" (data-tema="escuro" na tag <html>);
+   - ninguém escolheu nada e o sistema do aparelho está no escuro.
+   ========================================================= */
+:root[data-tema="escuro"] {
+  --fundo: #000000;
+  --superficie: #111418;
+  --tinta: #F1F3F5;
+  --tinta-suave: #9AA4B2;
+  --linha: #2A3038;
+
+  --bloco-resumo: #0F2A5C;   /* azul vivo, que se destaca no preto */
+  --texto-resumo: #F1F3F5;
+
+  --alta: #4ADE80;
+  --baixa: #F87171;
+  --alta-resumo: #6EE7A0;
+  --baixa-resumo: #FCA5A5;
+
+  --laranja: #FB923C;        /* laranja mais claro: contraste bom no preto */
+  --laranja-fundo: #2A1608;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fundo: #000000;
+    --superficie: #111418;
+    --tinta: #F1F3F5;
+    --tinta-suave: #9AA4B2;
+    --linha: #2A3038;
+    --bloco-resumo: #0F2A5C;
+    --texto-resumo: #F1F3F5;
+    --alta: #4ADE80;
+    --baixa: #F87171;
+    --laranja: #FB923C;
+    --laranja-fundo: #2A1608;
+    color-scheme: dark;
+  }
 }
 
 /* =========================================================
    2. BASE
-   Regras gerais que valem para a página toda.
    ========================================================= */
 * {
   box-sizing: border-box; /* largura passa a incluir padding e borda */
@@ -31,11 +87,12 @@ body {
   font-family: var(--fonte);
   font-size: 1.0625rem;   /* 17px: um pouco maior que o padrão, lê melhor */
   line-height: 1.5;
-  font-variant-numeric: tabular-nums; /* números com a mesma largura: colunas alinhadas */
+  font-variant-numeric: tabular-nums; /* números com a mesma largura */
+  transition: background-color var(--transicao), color var(--transicao);
 }
 
 ul {
-  list-style: none; /* remove as bolinhas das listas */
+  list-style: none;
   padding: 0;
 }
 
@@ -44,15 +101,20 @@ h2 {
   margin-bottom: var(--espaco);
 }
 
+/* Foco do teclado (tecla Tab): contorno laranja bem visível */
+:focus-visible {
+  outline: 3px solid var(--laranja);
+  outline-offset: 3px;
+}
+
 /* =========================================================
    3. LAYOUT (CELULAR PRIMEIRO)
-   Sem media query, tudo fica em uma coluna: é o celular.
    ========================================================= */
 .topo,
 main,
 .rodape {
   max-width: var(--largura-max);
-  margin-inline: auto;          /* centraliza o bloco na tela */
+  margin-inline: auto;
   padding: var(--espaco);
 }
 
@@ -60,12 +122,18 @@ main,
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: calc(var(--espaco) / 2);
 }
 
 .topo h1 {
   font-size: 1.25rem;
+}
+
+.topo-acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco);
 }
 
 .atualizado {
@@ -75,15 +143,36 @@ main,
 
 main {
   display: grid;
-  gap: calc(var(--espaco) * 2); /* espaço entre as seções */
+  gap: calc(var(--espaco) * 2);
+}
+
+/* =========================================================
+   3b. BOTÃO DE TEMA
+   ========================================================= */
+.botao-tema {
+  font: inherit;               /* botões não herdam a fonte sozinhos */
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--laranja);
+  background: transparent;
+  border: 2px solid var(--laranja);
+  border-radius: 999px;        /* formato de pílula */
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  transition: background-color var(--transicao), color var(--transicao);
+}
+
+.botao-tema:hover {
+  background: var(--laranja);
+  color: var(--fundo);
 }
 
 /* =========================================================
    4. RESUMO: o destaque da página
    ========================================================= */
 .resumo {
-  background: var(--tinta);
-  color: var(--fundo);
+  background: var(--bloco-resumo);
+  color: var(--texto-resumo);
   border-radius: 0.75rem;
   padding: calc(var(--espaco) * 1.5);
   display: grid;
@@ -93,41 +182,108 @@ main {
 .resumo h2 {
   font-size: 1rem;
   font-weight: 400;
-  opacity: 0.8;
+  opacity: 0.85;
   margin-bottom: 0;
 }
 
 .cartao-resumo .rotulo {
   font-size: 0.9375rem;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .cartao-resumo .valor {
   font-size: 1.375rem;
   font-weight: 700;
-  white-space: nowrap; /* não quebra "R$ 12,40 (+1,0%)" no meio */
+  white-space: nowrap;
 }
 
-/* O primeiro cartão (patrimônio total) é o número mais importante */
 .cartao-resumo:first-of-type .valor {
   font-size: 2.5rem;
   line-height: 1.1;
 }
 
-/* Sobre o fundo escuro, verde e vermelho precisam ser mais claros
-   para continuarem legíveis */
-.resumo .positivo { color: #7FD8A6; }
-.resumo .negativo { color: #FF9C94; }
+.resumo .positivo { color: var(--alta-resumo); }
+.resumo .negativo { color: var(--baixa-resumo); }
 
 /* =========================================================
-   5. CARTEIRA: lista no estilo extrato
+   5. DESTAQUES: ativos que mais se movimentaram + explicação
+   ========================================================= */
+.destaques .descricao {
+  color: var(--tinta-suave);
+  max-width: 40rem;
+  margin-bottom: var(--espaco);
+}
+
+.lista-destaques {
+  display: grid;
+  gap: var(--espaco);
+}
+
+.destaque {
+  height: 100%;
+  padding: var(--espaco);
+  background: var(--superficie);
+  border: 2px solid var(--linha);
+  border-radius: 0.75rem;
+  transition: border-color var(--transicao), transform var(--transicao),
+              box-shadow var(--transicao);
+}
+
+/* Hover: borda laranja, cartão sobe um pouco e ganha um brilho laranja */
+.destaque:hover {
+  border-color: var(--laranja);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px -8px var(--laranja);
+}
+
+.destaque h3 {
+  font-size: 1.25rem;
+  transition: color var(--transicao);
+}
+
+.destaque:hover h3 {
+  color: var(--laranja);
+}
+
+.destaque .tipo {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+.destaque .variacao {
+  font-weight: 700;
+  margin-block: 0.5rem var(--espaco);
+}
+
+/* A explicação da IA fica num bloco à parte, com barra lateral,
+   para ficar claro que é um texto gerado, e não um dado */
+.explicacao {
+  border-left: 3px solid var(--laranja);
+  padding-left: 0.75rem;
+}
+
+.explicacao-titulo {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+/* =========================================================
+   6. CARTEIRA: lista no estilo extrato
    ========================================================= */
 .ativo {
   display: grid;
-  grid-template-columns: 1fr auto; /* nome à esquerda, valores à direita */
+  grid-template-columns: 1fr auto;
   gap: 0.25rem var(--espaco);
-  padding-block: var(--espaco);
+  padding: var(--espaco) 0.75rem;
   border-bottom: 1px solid var(--linha);
+  border-left: 3px solid transparent; /* reserva o espaço da barra do hover */
+  transition: background-color var(--transicao), border-color var(--transicao);
+}
+
+/* Hover: a linha ganha fundo laranja clarinho e uma barra laranja */
+.ativo:hover {
+  background: var(--laranja-fundo);
+  border-left-color: var(--laranja);
 }
 
 .ativo h3 {
@@ -135,19 +291,19 @@ main {
 }
 
 .ativo .tipo {
-  grid-row: 2;               /* o tipo fica embaixo do nome */
+  grid-row: 2;
   color: var(--tinta-suave);
   font-size: 0.9375rem;
 }
 
 .ativo dl {
   grid-column: 2;
-  grid-row: 1 / span 2;      /* ocupa as duas linhas, à direita */
+  grid-row: 1 / span 2;
   text-align: right;
 }
 
 .ativo dt {
-  /* Rótulos ficam invisíveis na tela, mas leitores de tela continuam lendo */
+  /* Invisível na tela, mas leitores de tela continuam lendo */
   position: absolute;
   width: 1px;
   height: 1px;
@@ -164,17 +320,24 @@ main {
 }
 
 /* =========================================================
-   6. MERCADO
+   7. MERCADO
    ========================================================= */
 .lista-indicadores li {
   display: flex;
   justify-content: space-between;
-  padding-block: 0.75rem;
+  padding: 0.75rem;
   border-bottom: 1px solid var(--linha);
+  border-left: 3px solid transparent;
+  transition: background-color var(--transicao), border-color var(--transicao);
+}
+
+.lista-indicadores li:hover {
+  background: var(--laranja-fundo);
+  border-left-color: var(--laranja);
 }
 
 /* =========================================================
-   7. ALTA E BAIXA
+   8. ALTA E BAIXA
    Cor + seta: quem não enxerga bem as cores também entende.
    ========================================================= */
 .positivo { color: var(--alta); }
@@ -184,7 +347,7 @@ main {
 .negativo::before { content: "▼ "; font-size: 0.75em; }
 
 /* =========================================================
-   8. RODAPÉ
+   9. RODAPÉ
    ========================================================= */
 .rodape {
   color: var(--tinta-suave);
@@ -193,22 +356,25 @@ main {
 }
 
 /* =========================================================
-   9. TELAS MAIORES (a partir de 720px: tablet e PC)
+   10. TELAS MÉDIAS (a partir de 720px)
    ========================================================= */
 @media (min-width: 45rem) {
-  /* Carteira e mercado lado a lado, abaixo do resumo */
   main {
     grid-template-columns: 2fr 1fr;
   }
 
-  .resumo {
-    grid-column: 1 / -1; /* o resumo ocupa as duas colunas */
+  .resumo,
+  .destaques {
+    grid-column: 1 / -1;
+  }
+
+  .lista-destaques {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 /* =========================================================
-   10. TELAS GRANDES (a partir de 960px: PC)
-   Só aqui cabe os três números do resumo lado a lado.
+   11. TELAS GRANDES (a partir de 960px)
    ========================================================= */
 @media (min-width: 60rem) {
   .resumo {
@@ -217,6 +383,20 @@ main {
   }
 
   .resumo h2 {
-    grid-column: 1 / -1; /* o título ocupa a linha toda */
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================================================
+   12. MENOS MOVIMENTO
+   Quem ativou "reduzir movimento" no sistema não vê animações.
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+
+  .destaque:hover {
+    transform: none;
   }
 }
