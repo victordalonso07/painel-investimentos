@@ -6,7 +6,83 @@
   <title>Painel de Investimentos</title>
 </head>
 <body>
-  <h1>Olá, mundo!</h1>
-  <p>Painel de investimentos em construção.</p>
+
+  <header class="topo">
+    <h1>Painel de Investimentos</h1>
+    <p class="atualizado">Atualizado às <time>10:30</time></p>
+  </header>
+
+  <main>
+
+    <!-- Resumo: o que eu quero ver nos primeiros 5 segundos -->
+    <section class="resumo" aria-labelledby="titulo-resumo">
+      <h2 id="titulo-resumo">Resumo da carteira</h2>
+
+      <div class="cartao-resumo">
+        <p class="rotulo">Patrimônio total</p>
+        <p class="valor">R$ 1.250,00</p>
+      </div>
+
+      <div class="cartao-resumo">
+        <p class="rotulo">Hoje</p>
+        <p class="valor positivo">+ R$ 12,40 (+1,0%)</p>
+      </div>
+
+      <div class="cartao-resumo">
+        <p class="rotulo">Rendimento total</p>
+        <p class="valor positivo">+ R$ 50,00 (+4,2%)</p>
+      </div>
+    </section>
+
+    <!-- Carteira: cada ativo que eu tenho -->
+    <section class="carteira" aria-labelledby="titulo-carteira">
+      <h2 id="titulo-carteira">Minha carteira</h2>
+
+      <ul class="lista-ativos">
+        <li>
+          <article class="ativo">
+            <h3>Tesouro Selic 2031</h3>
+            <p class="tipo">Tesouro Direto</p>
+            <dl>
+              <dt>Valor atual</dt>
+              <dd>R$ 1.020,00</dd>
+              <dt>Variação</dt>
+              <dd class="positivo">+0,04% hoje</dd>
+            </dl>
+          </article>
+        </li>
+
+        <li>
+          <article class="ativo">
+            <h3>Bitcoin</h3>
+            <p class="tipo">Cripto</p>
+            <dl>
+              <dt>Valor atual</dt>
+              <dd>R$ 230,00</dd>
+              <dt>Variação</dt>
+              <dd class="negativo">-2,10% hoje</dd>
+            </dl>
+          </article>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Mercado: termômetro geral -->
+    <section class="mercado" aria-labelledby="titulo-mercado">
+      <h2 id="titulo-mercado">Mercado</h2>
+
+      <ul class="lista-indicadores">
+        <li>Ibovespa <span class="positivo">+0,8%</span></li>
+        <li>S&amp;P 500 <span class="negativo">-0,3%</span></li>
+        <li>Dólar <span>R$ 5,40</span></li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="rodape">
+    <p>Dados de exemplo. Não é recomendação de investimento.</p>
+  </footer>
+
 </body>
 </html>
