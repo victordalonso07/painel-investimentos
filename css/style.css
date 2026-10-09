@@ -386,6 +386,131 @@ body {
 }
 
 /* =========================================================
+   6b. PÁGINA CARTEIRA: lista completa
+   ========================================================= */
+.pagina-carteira .descricao {
+  color: var(--tinta-suave);
+  margin-bottom: var(--espaco);
+}
+
+.posicao {
+  padding: var(--espaco) 0.75rem;
+  border-bottom: 1px solid var(--linha);
+  border-left: 3px solid transparent;
+  transition: background-color var(--transicao), border-color var(--transicao);
+}
+
+.posicao:hover {
+  background: var(--laranja-fundo);
+  border-left-color: var(--laranja);
+}
+
+.posicao h3 {
+  font-size: 1.125rem;
+}
+
+.posicao .tipo {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+/* Os quatro números: 2 colunas no celular, 4 no PC (bloco 10) */
+.posicao dl {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem var(--espaco);
+  margin-top: 0.75rem;
+}
+
+.posicao dt {
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+}
+
+.posicao dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* =========================================================
+   6c. PÁGINA CARTEIRA: formulário de cadastro
+   ========================================================= */
+.cadastro {
+  align-self: start;             /* no PC, o cartão não estica até o fim da lista */
+  padding: calc(var(--espaco) * 1.25);
+  background: var(--superficie);
+  border: 2px solid var(--linha);
+  border-radius: 0.75rem;
+}
+
+.form-compra {
+  display: grid;
+  gap: var(--espaco);
+}
+
+.campo {
+  display: grid;
+  gap: 0.35rem;                  /* rótulo em cima, campo embaixo */
+}
+
+.campo label {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.campo input,
+.campo select {
+  font: inherit;                 /* campos não herdam a fonte sozinhos */
+  color: var(--tinta);
+  background: var(--fundo);
+  border: 2px solid var(--linha);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  transition: border-color var(--transicao);
+}
+
+.campo input:hover,
+.campo select:hover {
+  border-color: var(--tinta-suave);
+}
+
+/* Campo em uso: borda laranja (o contorno do :focus-visible some aqui) */
+.campo input:focus,
+.campo select:focus {
+  outline: none;
+  border-color: var(--laranja);
+}
+
+/* Botão principal: mesmas cores e efeito do botão de tema */
+.botao-primario {
+  font: inherit;
+  font-weight: 700;
+  color: var(--fundo);
+  background: var(--botao-tema);
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+  transition: opacity var(--transicao), filter var(--transicao);
+}
+
+.botao-primario:hover {
+  opacity: 0.8;
+}
+
+:root[data-tema="escuro"] .botao-primario:hover {
+  opacity: 1;
+  filter: brightness(1.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .botao-primario:hover {
+    opacity: 1;
+    filter: brightness(1.15);
+  }
+}
+
+/* =========================================================
    7. MERCADO
    ========================================================= */
 .lista-indicadores li {
@@ -477,6 +602,11 @@ body {
 
   .resumo h2 {
     grid-column: 1 / -1;
+  }
+
+  /* Carteira: os quatro números de cada posição lado a lado */
+  .posicao dl {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
