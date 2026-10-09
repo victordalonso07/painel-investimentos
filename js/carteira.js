@@ -14,5 +14,5 @@ formCompra.addEventListener("submit", (evento) => {
     evento.preventDefault();
 
     // Teste: mostra uma mensagem no console do navegador
-    console.log("Formuláio enviado!");
+    console.log("Formulário enviado!");
 });
