@@ -13,6 +13,16 @@ formCompra.addEventListener("submit", (evento) => {
     // ...impede o comportamento padrão: recarregar a página
     evento.preventDefault();
 
-    // Teste: mostra uma mensagem no console do navegador
-    console.log("Formulário enviado!");
+    // Lê o que foi digitado em cada campo
+    const ativo = document.getElementById("ativo").value.trim.().toUpperCase();
+    const tipo = document.getElementById("tipo").value;
+    const quantidade = Number(document.getElementById("quantidade").value);
+    const preco = Number(document.getElementById("preco").value);
+    const data = document.getElementById("data").value;
+
+    // Calcula quanto foi investido nessa compra
+    const totalInvestido = quantidade * preco;
+
+    // Teste: mostra tudo no console
+    console.log(ativo, tipo, quantidade, preco, data, totalInvestido)
 });
