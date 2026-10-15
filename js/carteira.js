@@ -14,7 +14,7 @@ formCompra.addEventListener("submit", (evento) => {
     evento.preventDefault();
 
     // Lê o que foi digitado em cada campo
-    const ativo = document.getElementById("ativo").value.trim.().toUpperCase();
+    const ativo = document.getElementById("ativo").value.trim().toUpperCase();
     const tipo = document.getElementById("tipo").value;
     const quantidade = Number(document.getElementById("quantidade").value);
     const preco = Number(document.getElementById("preco").value);
