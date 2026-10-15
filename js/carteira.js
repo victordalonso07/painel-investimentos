@@ -8,6 +8,13 @@
 const formCompra = document.getElementById("form-compra");
 const listaPosicoes = document.getElementById("lista-posicoes");
 
+
+// Formata um número como dinheiro brasileiro: 385 → "R$ 385,00"
+function formatarReais(valor) {
+    return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL"});
+}
+
+
 // Quando o formulário for enviado (clique no botão ou Enter)...
 formCompra.addEventListener("submit", (evento) => {
     // ...impede o comportamento padrão: recarregar a página
@@ -23,6 +30,24 @@ formCompra.addEventListener("submit", (evento) => {
     // Calcula quanto foi investido nessa compra
     const totalInvestido = quantidade * preco;
 
-    // Teste: mostra tudo no console
-    console.log(ativo, tipo, quantidade, preco, data, totalInvestido)
+    // Cria um item novo para a lista (um <li> vazio)
+    const item = document.createElement("li");
+
+    // Monta a estrutura do item, igual à dos que já estão no HTML
+    item.innerHTML = `
+        <article class="posicao">
+            <div class="posicao-nome">
+                <h3></h3>
+                <p class="tipo"></p>
+            </div>
+            <dl>
+                <div><dt>Quantidade</dt><dd class="campo-quantidade"></dd></div>
+                <div><dt>Preço pago</dt><dd class="campo-preco"></dd></div>
+                <div><dt>Total investido</dt><dd class="campo-total"></dd></div>
+                <div><dt>Data da compra</dt><dd class="campo-data"></dd></div>
+            </dl>
+        </article>
+    `;
+
+    
 });
