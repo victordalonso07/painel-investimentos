@@ -49,5 +49,14 @@ formCompra.addEventListener("submit", (evento) => {
         </article>
     `;
 
+    // Preenche os textos (textContent: o navegador trata como texto, nunca como código)
+    item.querySelector("h3").textContent = ativo;
+    ietm.querySelector(".tipo").textContent = tipo;
+    item.querySelector(".campo-quantidade").textContent = quantidade;
+    item.querySelector(".campo-preco").textContent = formatarReais(preco);
+    item.querySelector("campo-total").textContent = formatarReais(totalInvestido);
+    item.querySelector("campo-data").textContent = data
     
+    // Coloca o item no fim da lista
+    listaPosicoes.appendChild(item)
 });
