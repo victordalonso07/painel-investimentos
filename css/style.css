@@ -510,6 +510,20 @@ body {
   }
 }
 
+/* Confirmação do cadastro: só aparece quando tem texto */
+.mensagem-cadastro {
+  font-weight: 700;
+  color: var(--alta);
+}
+
+.mensagem-cadastro:empty {
+  display: none;               /* vazia (antes do primeiro cadastro): não ocupa espaço */
+}
+
+.mensagem-cadastro::before {
+  content: "✓ ";
+}
+
 /* =========================================================
    7. MERCADO
    ========================================================= */
