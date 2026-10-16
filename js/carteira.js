@@ -59,4 +59,14 @@ formCompra.addEventListener("submit", (evento) => {
     
     // Coloca o item no fim da lista
     listaPosicoes.appendChild(item)
+
+    // Limpa os campos e volta o cursor para o primeiro campo
+    formCompra.reset()
+    document.getElementById("ativo").focus();
+
+    // Mostra a confirmação na tela
+    const mensagem = document.getElementById("mensagem-cadastro");
+    mensagem.textContent = `${ativo} cadastrado com sucesso.`;
+    
+
 });
