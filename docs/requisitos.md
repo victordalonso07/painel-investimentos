@@ -52,6 +52,9 @@ O painel deve reunir os ativos num só lugar, com visual claro, interativo e exp
 - **Custos**
   - Só serviços gratuitos: Vercel (plano Hobby), APIs de dados grátis, IA com plano grátis (Gemini ou Groq).
   - O servidor guarda as respostas das APIs por alguns minutos (cache) para não estourar os limites grátis.
+  - brapi (plano grátis): 15.000 pedidos/mês, 1 ativo por pedido, cotação com ~30 min de atraso, sem cartão.
+    Decisão (16/10/2026): cache de 30 minutos na função do servidor. Ações e FIIs aparecem com ~30 min de atraso;
+    dólar e cripto vêm de APIs mais rápidas.
 - **Limitações**
   - CDB, LCI, fundos e previdência não têm API grátis. Se entrarem, o cadastro e a atualização são manuais.
   - A carteira precisa de um banco de dados na nuvem para aparecer igual no PC e no celular (a definir).
