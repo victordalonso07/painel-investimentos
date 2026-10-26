@@ -536,6 +536,29 @@ body {
   transition: background-color var(--transicao), border-color var(--transicao);
 }
 
+.indicador-nome small {
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+}
+
+/* Valor e variação lado a lado, alinhados à direita */
+.indicador-dados {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  text-align: right;
+}
+
+.variacao-pequena {
+  font-size: 0.875rem;
+}
+
+.nota-mercado {
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+  margin-top: 0.5rem;
+}
+
 .lista-indicadores li:hover {
   background: var(--laranja-fundo);
   border-left-color: var(--laranja);

@@ -4,40 +4,80 @@
 // Uso: /api/cotacao?ativo=PETR4
 // =========================================================
 
+// Responde com um erro em JSON, sempre no mesmo formato: { erro: "..." }
+function responderErro(mensagem, status) {
+    return Response.json({ erro: mensagem }, { status: status });
+}
+
 export default {
+    // A Vercel chama esta função toda vez que alguém acessa /api/cotacao
     async fetch(request) {
         // Lê o parâmetro "ativo" do endereço (ex.: ?ativo=PETR4)
         const url = new URL(request.url);
         const ativo = url.searchParams.get("ativo");
 
         // Valida: precisa existir e ter de 4 a 6 letras/números (ex.: PETR4, HGLG11)
-       if (!ativo || !/^[A-Za-z0-9]{4,6}$/.test(ativo)) {
-        return Response.json(
-            {erro: "Informe um ativo válido. Exemplo: ?ativo=PETR4" },
-            {status: 400}
-        );
-       }
+        if (!ativo || !/^[A-Za-z0-9]{4,6}$/.test(ativo)) {
+            return responderErro("Informe um ativo válido. Exemplo: ?ativo=PETR4", 400);
+        }
 
-       // Pega a chave no cofre da Vercel (variável de ambiente)
-       const chave = process.env.BRAPI_TOKEN;
+        // Pega a chave no cofre da Vercel (variável de ambiente)
+        const chave = process.env.BRAPI_TOKEN;
 
-       // Pergunta à brapi pela cotação, mandando a chave no cabeçalho (não no endereço)
-       const resposta = await fetch (`https://brapi.dev/api/quote/${ativo.toUpperCase()}`, {
-        headers: { Authorization: `Bearer ${chave}` },})
+        // Se a chave não estiver configurada na Vercel, avisa no registro do servidor
+        if (!chave) {
+            console.error("A variável BRAPI_TOKEN não está configurada na Vercel.");
+            return responderErro("Serviço de cotação não configurado.", 500);
+        }
 
-         // Transforma a resposta da brapi em objeto
-         const dados = await resposta.json();
+        try {
+            // Pergunta à brapi pela cotação, mandando a chave no cabeçalho (não no endereço)
+            const resposta = await fetch(`https://brapi.dev/api/quote/${ativo.toUpperCase()}`, {
+                headers: { Authorization: `Bearer ${chave}` },
+            });
 
-        // A brapi devolve uma lista chamada "results"; pegamos o primeiro (e único) item
-        const cotacao = dados.results[0];
+            // 429: o limite do plano grátis foi atingido
+            if (resposta.status === 429) {
+                return responderErro("Limite de consultas atingido. Tente mais tarde.", 429);
+            }
 
-        // Devolve só o que a página precisa
-        return Response.json({
-            ativo: cotacao.symbol,
-            nome: cotacao.shortName,
-            preco: cotacao.regularMarketPrice,
-            variacao: cotacao.regularMarketChangePercent,
-            atualizadoEm: cotacao.regularMarketTime,
-        })
+            // Qualquer outro erro da brapi (ex.: ativo que não existe)
+            if (!resposta.ok) {
+                return responderErro("Ativo não encontrado ou indisponível.", 404);
+            }
+
+            // Transforma a resposta da brapi em objeto
+            const dados = await resposta.json();
+
+            // A brapi devolve uma lista chamada "results"; pegamos o primeiro (e único) item.
+            // O "?." evita erro se a lista vier vazia ou não existir
+            const cotacao = dados.results?.[0];
+
+            if (!cotacao) {
+                return responderErro("Ativo não encontrado ou indisponível.", 404);
+            }
+
+            // Devolve só o que a página precisa, com cache de 30 minutos
+            return Response.json(
+                {
+                    ativo: cotacao.symbol,
+                    nome: cotacao.shortName,
+                    preco: cotacao.regularMarketPrice,
+                    variacao: cotacao.regularMarketChangePercent,
+                    atualizadoEm: cotacao.regularMarketTime,
+                },
+                {
+                    headers: {
+                        // s-maxage=1800: o servidor da Vercel guarda esta resposta por 1800 s (30 min).
+                        // Durante esse tempo, a brapi nem é consultada: protege o limite de 15.000/mês
+                        "Cache-Control": "public, s-maxage=1800",
+                    },
+                }
+            );
+        } catch (erro) {
+            // Falha de rede ou resposta inesperada: registra o detalhe só no servidor
+            console.error("Falha ao consultar a brapi:", erro);
+            return responderErro("Falha ao consultar a cotação.", 502);
+        }
     },
 };

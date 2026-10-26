@@ -30,7 +30,7 @@
       </ul>
     </nav>
     <div class="topo-acoes">
-      <p class="atualizado">Atualizado às <time>10:30</time></p>
+      <p class="atualizado">Atualizado às <time id="horario-atualizacao">--:--</time></p>
       <button type="button" class="botao-tema" id="botao-tema" aria-pressed="false">
         Modo escuro
       </button>
@@ -146,12 +146,32 @@
     <section class="mercado" aria-labelledby="titulo-mercado">
       <h2 id="titulo-mercado">Mercado</h2>
 
+      <!-- Valores REAIS, preenchidos pelo js/mercado.js (cada <span> tem um id) -->
       <ul class="lista-indicadores">
-        <li>Ibovespa <span class="positivo">+0,8%</span></li>
-        <li>S&amp;P 500 <span class="negativo">-0,3%</span></li>
-        <!-- Dólar: valor REAL, preenchido pelo js/mercado.js (id="cotacao-dolar") -->
-        <li>Dólar <span id="cotacao-dolar">Carregando…</span></li>
+        <li>
+          <span class="indicador-nome">Ibovespa <small>(via BOVA11)</small></span>
+          <span class="indicador-dados"><span id="ibovespa-variacao">Carregando…</span></span>
+        </li>
+        <li>
+          <span class="indicador-nome">S&amp;P 500 <small>(via IVVB11)</small></span>
+          <span class="indicador-dados"><span id="sp500-variacao">Carregando…</span></span>
+        </li>
+        <li>
+          <span class="indicador-nome">Dólar comercial</span>
+          <span class="indicador-dados">
+            <span id="dolar-valor">Carregando…</span>
+            <span id="dolar-variacao" class="variacao-pequena"></span>
+          </span>
+        </li>
+        <li>
+          <span class="indicador-nome">Bitcoin</span>
+          <span class="indicador-dados">
+            <span id="bitcoin-valor">Carregando…</span>
+            <span id="bitcoin-variacao" class="variacao-pequena"></span>
+          </span>
+        </li>
       </ul>
+      <p class="nota-mercado">Ibovespa e S&amp;P 500: variação do dia, com cerca de 30 min de atraso.</p>
     </section>
 
   </main>
