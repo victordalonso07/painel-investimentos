@@ -24,7 +24,7 @@ try {
 
      // Se a API respondeu com erro (ex.: 404, 429, 500), para aqui e vai para o catch
      if (!resposta.ok) {
-        throw new Error(`A api respondeu com o código ${resposta.status}"`);
+        throw new Error(`A api respondeu com o código ${resposta.status}`);
      }
     
     // Transforma o texto JSON da resposta em um objeto do JavaScript
