@@ -68,9 +68,14 @@ O painel deve reunir os ativos num só lugar, com visual claro, interativo e exp
 | Tesouro Direto | Tesouro Transparente |
 | Câmbio | AwesomeAPI |
 
+## Decisões tomadas
+
+- **Login (27/10/2026):** por enquanto, o site inteiro (inclusive `/api`) fica protegido pela
+  Vercel Authentication ("All Deployments"): só entra quem estiver logado na conta da Vercel do dono.
+  Na fase do banco de dados, avaliar um serviço que traga banco + login juntos (ex.: Supabase).
+
 ## Decisões em aberto
 
-- Qual banco de dados usar para a carteira.
-- Como fazer o login (antes: aula de cibersegurança).
+- Qual banco de dados usar para a carteira (e se o login migra junto para esse serviço).
 - Formato da explicação da IA e qual fonte de notícias usar.
 - Quais gráficos e quais períodos.
