@@ -113,6 +113,25 @@ export default {
                 const { erro, operacao } = validarOperacao(corpo);
                 if (erro) return responderErro(erro, 400);
 
+                // Venda: confere no banco se há quantidade suficiente desse ativo.
+                // O navegador também confere, mas o servidor nunca confia só no navegador
+                if (operacao.tipo_operacao === "venda") {
+                    const consulta = await fetch(
+                        `${tabela}?select=tipo_operacao,quantidade&ativo=eq.${encodeURIComponent(operacao.ativo)}`,
+                        { headers: cabecalhosSupabase(chave) }
+                    );
+                    if (!consulta.ok) {
+                        console.error("Supabase recusou a consulta da venda:", consulta.status, await consulta.text());
+                        return responderErro("Não foi possível conferir a venda.", 502);
+                    }
+                    const anteriores = await consulta.json();
+                    const saldo = anteriores.reduce((soma, op) =>
+                        soma + (op.tipo_operacao === "compra" ? 1 : -1) * Number(op.quantidade), 0);
+                    if (operacao.quantidade > saldo + 1e-9) {
+                        return responderErro(`Quantidade maior do que você tem de ${operacao.ativo}.`, 400);
+                    }
+                }
+
                 const resposta = await fetch(tabela, {
                     method: "POST",
                     // return=representation: o banco devolve a linha criada (com id e criado_em)

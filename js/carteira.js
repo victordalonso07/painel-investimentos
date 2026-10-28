@@ -1,5 +1,5 @@
 // =========================================================
-// CARTEIRA: compras salvas no banco (Supabase)
+// CARTEIRA: compras e vendas salvas no banco (Supabase)
 // - Ao abrir a página: GET /api/operacoes → desenha posições (rendimento.js) e histórico
 // - Ao enviar o formulário: POST /api/operacoes → grava e redesenha
 // - Botão Excluir: DELETE /api/operacoes?id=... → apaga e redesenha
@@ -16,6 +16,14 @@ const botaoAdicionar = document.getElementById("botao-adicionar");
 
 
 // (formatarReais, formatarQuantidade e formatarData estão no js/comum.js)
+
+// Última lista carregada do banco (usada para conferir se uma venda é possível)
+let ultimasOperacoes = [];
+
+// "compra" → "Compra", "venda" → "Venda"
+function nomeOperacaoDe(operacao) {
+    return operacao.tipo_operacao === "venda" ? "Venda" : "Compra";
+}
 
 // Mostra uma mensagem abaixo do botão (verde com ✓, ou vermelha com ✕ se for erro)
 function mostrarMensagem(texto, ehErro) {
@@ -42,9 +50,9 @@ function criarItem(operacao) {
             </div>
             <dl>
                 <div><dt>Quantidade</dt><dd class="campo-quantidade"></dd></div>
-                <div><dt>Preço pago</dt><dd class="campo-preco"></dd></div>
-                <div><dt>Total investido</dt><dd class="campo-total"></dd></div>
-                <div><dt>Data da compra</dt><dd class="campo-data"></dd></div>
+                <div><dt>Preço</dt><dd class="campo-preco"></dd></div>
+                <div><dt>Total</dt><dd class="campo-total"></dd></div>
+                <div><dt>Data</dt><dd class="campo-data"></dd></div>
             </dl>
             <button type="button" class="botao-excluir">Excluir</button>
         </article>
@@ -52,7 +60,9 @@ function criarItem(operacao) {
 
     // textContent: o navegador trata como texto, nunca como código (protege contra XSS)
     item.querySelector("h3").textContent = operacao.ativo;
-    item.querySelector(".tipo").textContent = operacao.tipo_ativo;
+    // Ex.: "Compra · Ação" ou "Venda · FII"
+    const nomeOperacao = nomeOperacaoDe(operacao);
+    item.querySelector(".tipo").textContent = `${nomeOperacao} · ${operacao.tipo_ativo}`;
     item.querySelector(".campo-quantidade").textContent = formatarQuantidade(quantidade);
     item.querySelector(".campo-preco").textContent = formatarReais(preco);
     item.querySelector(".campo-total").textContent = formatarReais(quantidade * preco);
@@ -60,7 +70,7 @@ function criarItem(operacao) {
 
     // Botão Excluir: o primeiro clique pede confirmação, o segundo apaga
     const botaoExcluir = item.querySelector(".botao-excluir");
-    botaoExcluir.setAttribute("aria-label", `Excluir compra de ${operacao.ativo}`);
+    botaoExcluir.setAttribute("aria-label", `Excluir ${nomeOperacao.toLowerCase()} de ${operacao.ativo}`);
     botaoExcluir.addEventListener("click", () => excluirOperacao(operacao, botaoExcluir));
 
     return item;
@@ -73,6 +83,7 @@ function criarItem(operacao) {
 async function carregarOperacoes() {
     try {
         const operacoes = await buscarOperacoes();   // GET (js/comum.js)
+        ultimasOperacoes = operacoes;                // guardadas para conferir vendas
 
         // Histórico: limpa e desenha de novo, uma operação por vez
         listaOperacoes.innerHTML = "";
@@ -118,7 +129,7 @@ async function excluirOperacao(operacao, botao) {
             const dados = await resposta.json();
             throw new Error(dados.erro ?? `Código ${resposta.status}`);
         }
-        mostrarMensagem(`Compra de ${operacao.ativo} excluída.`, false);
+        mostrarMensagem(`${nomeOperacaoDe(operacao)} de ${operacao.ativo} excluída.`, false);
         await carregarOperacoes();
     } catch (erro) {
         mostrarMensagem("Não foi possível excluir. Tente de novo.", true);
@@ -137,13 +148,28 @@ formCompra.addEventListener("submit", async (evento) => {
 
     // Monta o objeto com os MESMOS nomes das colunas da tabela "operacoes"
     const novaOperacao = {
-        tipo_operacao: "compra",
+        tipo_operacao: document.getElementById("operacao").value,
         ativo: document.getElementById("ativo").value.trim().toUpperCase(),
         tipo_ativo: document.getElementById("tipo").value,
         quantidade: Number(document.getElementById("quantidade").value),
         preco_unitario: Number(document.getElementById("preco").value),
+        taxas: Number(document.getElementById("taxas").value || 0),   // vazio = 0
         data_operacao: document.getElementById("data").value,
     };
+
+    // Venda: confere antes se você tem essa quantidade (o servidor confere de novo)
+    if (novaOperacao.tipo_operacao === "venda") {
+        const posicao = calcularPosicoes(ultimasOperacoes).find((p) => p.ativo === novaOperacao.ativo);
+        if (!posicao) {
+            mostrarMensagem(`Você não tem ${novaOperacao.ativo} na carteira para vender.`, true);
+            return;
+        }
+        if (novaOperacao.quantidade > posicao.quantidade + 1e-9) {
+            mostrarMensagem(`Você tem só ${formatarQuantidade(posicao.quantidade)} de ${novaOperacao.ativo}.`, true);
+            return;
+        }
+        novaOperacao.tipo_ativo = posicao.tipo;   // a venda usa o mesmo tipo da compra
+    }
 
     // Desliga o botão enquanto salva: evita gravar duas vezes com clique duplo
     botaoAdicionar.disabled = true;
@@ -168,7 +194,7 @@ formCompra.addEventListener("submit", async (evento) => {
         // Deu certo (201): limpa o formulário e redesenha a lista com o que está no banco
         formCompra.reset();
         document.getElementById("ativo").focus();
-        mostrarMensagem(`${dados.ativo} cadastrado com sucesso.`, false);
+        mostrarMensagem(`${nomeOperacaoDe(dados)} de ${dados.ativo} cadastrada.`, false);
         await carregarOperacoes();
     } catch (erro) {
         mostrarMensagem("Falha de conexão. Verifique a internet e tente de novo.", true);

@@ -48,21 +48,29 @@
       <!-- Uma posição por ativo: várias compras do mesmo ativo viram uma linha só -->
       <ul class="lista-posicoes" id="lista-posicoes"></ul>
 
-      <h2 class="titulo-historico" id="titulo-historico">Histórico de compras</h2>
-      <!-- Cada compra separada, com o botão Excluir -->
+      <h2 class="titulo-historico" id="titulo-historico">Histórico de operações</h2>
+      <!-- Cada compra ou venda separada, com o botão Excluir -->
       <ul class="lista-operacoes" id="lista-operacoes" aria-labelledby="titulo-historico"></ul>
     </section>
 
-    <!-- Cadastro de ativo: registrar uma compra nova -->
+    <!-- Cadastro: registrar uma compra ou venda nova -->
     <section class="cadastro" aria-labelledby="titulo-cadastro">
-      <h2 id="titulo-cadastro">Cadastrar compra</h2>
+      <h2 id="titulo-cadastro">Cadastrar operação</h2>
       <p class="descricao">
-        A compra fica salva no banco de dados: aparece igual no PC e no celular.
+        Compras e vendas ficam salvas no banco de dados: aparecem igual no PC e no celular.
       </p>
 
       <!-- id="form-compra": é por esse nome que o JavaScript acha o cadastro -->
       <form class="form-compra" id="form-compra">
         <!-- Cada campo tem um <label>: clicar no texto foca o campo, e leitores de tela leem o nome -->
+        <div class="campo">
+          <label for="operacao">Operação</label>
+          <select id="operacao" name="operacao">
+            <option value="compra">Compra</option>
+            <option value="venda">Venda</option>
+          </select>
+        </div>
+
         <div class="campo">
           <label for="ativo">Ativo</label>
           <input type="text" id="ativo" name="ativo" placeholder="Ex.: PETR4" required>
@@ -88,16 +96,22 @@
         </div>
 
         <div class="campo">
-          <label for="preco">Preço pago por unidade (R$)</label>
+          <label for="preco">Preço por unidade (R$)</label>
           <input type="number" id="preco" name="preco" min="0" step="0.01" required>
         </div>
 
         <div class="campo">
-          <label for="data">Data da compra</label>
+          <label for="taxas">Taxas (R$, opcional)</label>
+          <!-- Corretagem, emolumentos etc. Entram no custo: deixam o preço médio mais real -->
+          <input type="number" id="taxas" name="taxas" min="0" step="0.01" placeholder="0,00">
+        </div>
+
+        <div class="campo">
+          <label for="data">Data</label>
           <input type="date" id="data" name="data" required>
         </div>
 
-        <button type="submit" class="botao-primario" id="botao-adicionar">Adicionar compra</button>
+        <button type="submit" class="botao-primario" id="botao-adicionar">Adicionar</button>
 
         <!-- Mensagem de confirmação: começa vazia; o JavaScript escreve aqui depois do cadastro.
              role="status" faz leitores de tela anunciarem a mensagem quando ela aparece -->
