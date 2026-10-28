@@ -524,6 +524,21 @@ body {
   content: "✓ ";
 }
 
+/* Mensagem de erro (o JavaScript adiciona a classe "erro"): vermelha e com ✕ */
+.mensagem-cadastro.erro {
+  color: var(--baixa);
+}
+
+.mensagem-cadastro.erro::before {
+  content: "✕ ";
+}
+
+/* Botão desligado enquanto salva: evita gravar a mesma compra duas vezes */
+.botao-primario:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 /* =========================================================
    7. MERCADO
    ========================================================= */

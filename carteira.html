@@ -40,72 +40,18 @@
     <!-- Lista completa: cada compra com quantidade, preço médio e resultado -->
     <section class="carteira-completa" aria-labelledby="titulo-carteira">
       <h2 id="titulo-carteira">Minha carteira</h2>
-      <p class="descricao">Total investido: R$ 1.200,00. Valor atual: R$ 1.250,00.</p>
+      <!-- Resumo e lista vêm do banco: o js/carteira.js preenche ao abrir a página -->
+      <p class="descricao" id="resumo-carteira">Carregando suas compras…</p>
 
-      <ul class="lista-posicoes" id="lista-posicoes">
-        <li>
-          <article class="posicao">
-            <div class="posicao-nome">
-              <h3>Tesouro Selic 2031</h3>
-              <p class="tipo">Tesouro Direto</p>
-            </div>
-            <!-- <dl>: pares de rótulo (dt) e valor (dd); cada par fica numa <div> -->
-            <dl>
-              <div>
-                <dt>Quantidade</dt>
-                <dd>0,07 título</dd>
-              </div>
-              <div>
-                <dt>Preço médio</dt>
-                <dd>R$ 14.285,71</dd>
-              </div>
-              <div>
-                <dt>Valor atual</dt>
-                <dd>R$ 1.020,00</dd>
-              </div>
-              <div>
-                <dt>Resultado</dt>
-                <dd class="positivo">+ R$ 20,00 (+2,0%)</dd>
-              </div>
-            </dl>
-          </article>
-        </li>
-
-        <li>
-          <article class="posicao">
-            <div class="posicao-nome">
-              <h3>Bitcoin</h3>
-              <p class="tipo">Cripto</p>
-            </div>
-            <dl>
-              <div>
-                <dt>Quantidade</dt>
-                <dd>0,0004 BTC</dd>
-              </div>
-              <div>
-                <dt>Preço médio</dt>
-                <dd>R$ 500.000,00</dd>
-              </div>
-              <div>
-                <dt>Valor atual</dt>
-                <dd>R$ 230,00</dd>
-              </div>
-              <div>
-                <dt>Resultado</dt>
-                <dd class="positivo">+ R$ 30,00 (+15,0%)</dd>
-              </div>
-            </dl>
-          </article>
-        </li>
-      </ul>
+      <!-- Começa vazia: cada compra salva vira um <li> aqui -->
+      <ul class="lista-posicoes" id="lista-posicoes"></ul>
     </section>
 
     <!-- Cadastro de ativo: registrar uma compra nova -->
     <section class="cadastro" aria-labelledby="titulo-cadastro">
       <h2 id="titulo-cadastro">Cadastrar compra</h2>
       <p class="descricao">
-        Por enquanto, a compra aparece na lista só até você recarregar a página.
-        Salvar de verdade vem junto com o banco de dados.
+        A compra fica salva no banco de dados: aparece igual no PC e no celular.
       </p>
 
       <!-- id="form-compra": é por esse nome que o JavaScript acha o cadastro -->
@@ -145,7 +91,7 @@
           <input type="date" id="data" name="data" required>
         </div>
 
-        <button type="submit" class="botao-primario">Adicionar compra</button>
+        <button type="submit" class="botao-primario" id="botao-adicionar">Adicionar compra</button>
 
         <!-- Mensagem de confirmação: começa vazia; o JavaScript escreve aqui depois do cadastro.
              role="status" faz leitores de tela anunciarem a mensagem quando ela aparece -->
