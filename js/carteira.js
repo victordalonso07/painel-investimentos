@@ -2,6 +2,7 @@
 // CARTEIRA: compras salvas no banco (Supabase)
 // - Ao abrir a página: GET /api/operacoes → desenha a lista
 // - Ao enviar o formulário: POST /api/operacoes → grava e redesenha
+// - Botão Excluir: DELETE /api/operacoes?id=... → apaga e redesenha
 // O navegador nunca fala direto com o banco: sempre pela nossa API.
 // =========================================================
 
@@ -58,6 +59,7 @@ function criarItem(operacao) {
                 <div><dt>Total investido</dt><dd class="campo-total"></dd></div>
                 <div><dt>Data da compra</dt><dd class="campo-data"></dd></div>
             </dl>
+            <button type="button" class="botao-excluir">Excluir</button>
         </article>
     `;
 
@@ -68,6 +70,11 @@ function criarItem(operacao) {
     item.querySelector(".campo-preco").textContent = formatarReais(preco);
     item.querySelector(".campo-total").textContent = formatarReais(quantidade * preco);
     item.querySelector(".campo-data").textContent = formatarData(operacao.data_operacao);
+
+    // Botão Excluir: o primeiro clique pede confirmação, o segundo apaga
+    const botaoExcluir = item.querySelector(".botao-excluir");
+    botaoExcluir.setAttribute("aria-label", `Excluir compra de ${operacao.ativo}`);
+    botaoExcluir.addEventListener("click", () => excluirOperacao(operacao, botaoExcluir));
 
     return item;
 }
@@ -103,6 +110,44 @@ async function carregarOperacoes() {
     } catch (erro) {
         resumoCarteira.textContent = "Não foi possível carregar suas compras. Tente recarregar a página.";
         console.error("Falha ao carregar operações:", erro);
+    }
+}
+
+
+// ---------------------------------------------------------
+// DELETE: apaga uma operação (com confirmação em dois cliques)
+// ---------------------------------------------------------
+async function excluirOperacao(operacao, botao) {
+    // 1º clique: só troca o texto e espera a confirmação.
+    // "dataset.confirmando" guarda um estado no próprio botão (vira data-confirmando no HTML)
+    if (botao.dataset.confirmando !== "sim") {
+        botao.dataset.confirmando = "sim";
+        botao.textContent = "Confirmar exclusão";
+        // Se não confirmar em 4 segundos, volta ao normal
+        setTimeout(() => {
+            botao.dataset.confirmando = "";
+            botao.textContent = "Excluir";
+        }, 4000);
+        return;
+    }
+
+    // 2º clique: apaga de verdade
+    botao.disabled = true;
+    try {
+        // O id vai no endereço; encodeURIComponent garante que ele não "quebre" o endereço
+        const resposta = await fetch(`/api/operacoes?id=${encodeURIComponent(operacao.id)}`, {
+            method: "DELETE",
+        });
+        if (!resposta.ok) {
+            const dados = await resposta.json();
+            throw new Error(dados.erro ?? `Código ${resposta.status}`);
+        }
+        mostrarMensagem(`Compra de ${operacao.ativo} excluída.`, false);
+        await carregarOperacoes();
+    } catch (erro) {
+        mostrarMensagem("Não foi possível excluir. Tente de novo.", true);
+        console.error("Falha ao excluir operação:", erro);
+        botao.disabled = false;
     }
 }
 

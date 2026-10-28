@@ -3,6 +3,7 @@
 // Roda no servidor da Vercel, NÃO no navegador.
 //   GET  /api/operacoes  → lista todas as operações
 //   POST /api/operacoes  → grava uma operação nova (dados em JSON)
+//   DELETE /api/operacoes?id=12 → apaga a operação de id 12
 // Conversa com o banco Supabase usando a chave secreta, guardada no cofre da Vercel.
 // =========================================================
 
@@ -126,8 +127,35 @@ export default {
                 return Response.json(criada, { status: 201, headers: { "Cache-Control": "no-store" } });
             }
 
-            // Qualquer outro método (PUT, DELETE...) ainda não existe
-            return new Response(null, { status: 405, headers: { Allow: "GET, POST" } });
+            // ---------- APAGAR (DELETE) ----------
+            if (request.method === "DELETE") {
+                // O id vem no endereço (?id=12) e precisa ser só números
+                const id = new URL(request.url).searchParams.get("id");
+                if (!id || !/^\d{1,15}$/.test(id)) {
+                    return responderErro("Informe um id válido. Exemplo: ?id=12", 400);
+                }
+
+                // "id=eq.12" é como o Supabase entende "onde id é igual a 12".
+                // Sem esse filtro, o DELETE apagaria a tabela inteira: por isso o id é obrigatório
+                const resposta = await fetch(`${tabela}?id=eq.${id}`, {
+                    method: "DELETE",
+                    headers: { ...cabecalhosSupabase(chave), Prefer: "return=representation" },
+                });
+                if (!resposta.ok) {
+                    console.error("Supabase recusou a exclusão:", resposta.status, await resposta.text());
+                    return responderErro("Não foi possível excluir a operação.", 502);
+                }
+
+                // O banco devolve a lista do que apagou: vazia = esse id não existia
+                const apagadas = await resposta.json();
+                if (apagadas.length === 0) {
+                    return responderErro("Operação não encontrada.", 404);
+                }
+                return Response.json(apagadas[0], { headers: { "Cache-Control": "no-store" } });
+            }
+
+            // Qualquer outro método (PUT, PATCH...) ainda não existe
+            return new Response(null, { status: 405, headers: { Allow: "GET, POST, DELETE" } });
         } catch (erro) {
             console.error("Falha ao falar com o Supabase:", erro);
             return responderErro("Falha ao acessar o banco de dados.", 502);

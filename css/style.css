@@ -432,6 +432,32 @@ body {
   font-weight: 700;
 }
 
+/* Botão Excluir: discreto (contorno), fica vermelho ao passar o mouse ou ao pedir confirmação */
+.botao-excluir {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--tinta-suave);
+  background: transparent;
+  border: 2px solid var(--linha);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  margin-top: 0.75rem;
+  cursor: pointer;
+  transition: color var(--transicao), border-color var(--transicao);
+}
+
+.botao-excluir:hover,
+.botao-excluir[data-confirmando="sim"] {
+  color: var(--baixa);
+  border-color: var(--baixa);
+}
+
+.botao-excluir:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 /* =========================================================
    6c. PÁGINA CARTEIRA: formulário de cadastro
    ========================================================= */
