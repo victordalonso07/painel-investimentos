@@ -6,37 +6,13 @@
 // - Bitcoin: CoinGecko (grátis, sem chave)
 // =========================================================
 
-// Formata um número como dinheiro brasileiro: 5.41 → "R$ 5,41"
-function formatarReais(valor) {
-    return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-// Formata uma variação em %: 1.234 → "+1,23%" e -0.5 → "-0,50%"
-function formatarPercentual(valor) {
-    const sinal = valor > 0 ? "+" : "";
-    const numero = valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return `${sinal}${numero}%`;
-}
+// (formatarReais, formatarPercentual, buscarJSON e buscarCotacaoB3 estão no js/comum.js)
 
 // Mostra a variação num elemento e pinta de verde (alta) ou vermelho (baixa).
 // As classes "positivo" e "negativo" já existem no CSS (com as setas ▲ ▼)
 function mostrarVariacao(elemento, variacao) {
     elemento.textContent = formatarPercentual(variacao);
-    elemento.classList.remove("positivo", "negativo");
-    if (variacao > 0) {
-        elemento.classList.add("positivo");
-    } else if (variacao < 0) {
-        elemento.classList.add("negativo");
-    }
-}
-
-// Busca um endereço e devolve o JSON; se a resposta vier com erro, lança um erro
-async function buscarJSON(endereco) {
-    const resposta = await fetch(endereco);
-    if (!resposta.ok) {
-        throw new Error(`A API respondeu com o código ${resposta.status}`);
-    }
-    return resposta.json();
+    pintarSinal(elemento, variacao);
 }
 
 // ---------------------------------------------------------
@@ -45,7 +21,7 @@ async function buscarJSON(endereco) {
 async function buscarIndice(ativo, idElemento) {
     const elemento = document.getElementById(idElemento);
     try {
-        const dados = await buscarJSON(`/api/cotacao?ativo=${ativo}`);
+        const dados = await buscarCotacaoB3(ativo);   // entra na fila da brapi
         mostrarVariacao(elemento, dados.variacao);
     } catch (erro) {
         elemento.textContent = "Indisponível";
@@ -106,9 +82,11 @@ async function carregarMercado() {
     buscarDolar();
     buscarBitcoin();
 
-    // A brapi grátis aceita 1 consulta por vez: buscamos os dois ETFs um depois do outro
-    await buscarIndice("BOVA11", "ibovespa-variacao");
-    await buscarIndice("IVVB11", "sp500-variacao");
+    // Os dois ETFs entram na fila da brapi (1 consulta por vez, ver js/comum.js)
+    await Promise.all([
+        buscarIndice("BOVA11", "ibovespa-variacao"),
+        buscarIndice("IVVB11", "sp500-variacao"),
+    ]);
 
     mostrarHorario();
 }

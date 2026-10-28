@@ -385,6 +385,19 @@ body {
   font-weight: 700;
 }
 
+/* Link "Ver carteira completa →" no fim da lista da página Início */
+.link-carteira {
+  display: inline-block;
+  margin-top: var(--espaco);
+  font-weight: 700;
+  color: var(--laranja);
+  text-decoration: none;
+}
+
+.link-carteira:hover {
+  text-decoration: underline;
+}
+
 /* =========================================================
    6b. PÁGINA CARTEIRA: lista completa
    ========================================================= */

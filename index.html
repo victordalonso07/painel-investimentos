@@ -11,8 +11,10 @@
   <!-- Carregado no topo de propósito: aplica o tema antes da página aparecer,
        evitando um "piscar" do modo claro quando o escolhido é o escuro -->
   <script src="js/tema.js"></script>
-  <!-- defer: roda depois que o HTML carregar (a seção Mercado já vai existir) -->
+  <!-- defer: roda depois que o HTML carregar. A ordem importa: comum.js primeiro -->
+  <script src="js/comum.js" defer></script>
   <script src="js/mercado.js" defer></script>
+  <script src="js/inicio.js" defer></script>
 </head>
 <body>
 
@@ -43,19 +45,20 @@
     <section class="resumo" aria-labelledby="titulo-resumo">
       <h2 id="titulo-resumo">Resumo da carteira</h2>
 
+      <!-- Valores reais: o js/inicio.js calcula a partir da carteira salva no banco -->
       <div class="cartao-resumo">
         <p class="rotulo">Patrimônio total</p>
-        <p class="valor">R$ 1.250,00</p>
+        <p class="valor" id="resumo-patrimonio">Carregando…</p>
       </div>
 
       <div class="cartao-resumo">
         <p class="rotulo">Hoje</p>
-        <p class="valor positivo">+ R$ 12,40 (+1,0%)</p>
+        <p class="valor" id="resumo-hoje">Carregando…</p>
       </div>
 
       <div class="cartao-resumo">
         <p class="rotulo">Rendimento total</p>
-        <p class="valor positivo">+ R$ 50,00 (+4,2%)</p>
+        <p class="valor" id="resumo-rendimento">Carregando…</p>
       </div>
     </section>
 
@@ -63,83 +66,23 @@
     <section class="destaques" aria-labelledby="titulo-destaques">
       <h2 id="titulo-destaques">Em destaque hoje</h2>
       <p class="descricao">
-        Os ativos que mais se movimentaram hoje, com o motivo explicado.
-        Os textos abaixo são exemplos: as explicações reais virão da IA.
+        Os ativos da sua carteira que mais se movimentaram hoje.
+        A explicação do motivo virá da IA.
       </p>
 
-      <ul class="lista-destaques">
-        <li>
-          <article class="destaque">
-            <h3>PETR4</h3>
-            <p class="tipo">Ação da Petrobras</p>
-            <p class="variacao positivo">+3,20% hoje</p>
-            <div class="explicacao">
-              <p class="explicacao-titulo">Por que se mexeu</p>
-              <p>Acompanhou a alta do petróleo no mercado internacional, que subiu após
-                 países produtores anunciarem corte na produção.</p>
-            </div>
-          </article>
-        </li>
-
-        <li>
-          <article class="destaque">
-            <h3>IVVB11</h3>
-            <p class="tipo">ETF que segue o S&amp;P 500</p>
-            <p class="variacao negativo">-1,10% hoje</p>
-            <div class="explicacao">
-              <p class="explicacao-titulo">Por que se mexeu</p>
-              <p>Caiu junto com a bolsa americana e com a queda do dólar frente ao real,
-                 que reduz o valor em reais dos ativos dos EUA.</p>
-            </div>
-          </article>
-        </li>
-
-        <li>
-          <article class="destaque">
-            <h3>HGLG11</h3>
-            <p class="tipo">Fundo imobiliário de galpões logísticos</p>
-            <p class="variacao positivo">+0,90% hoje</p>
-            <div class="explicacao">
-              <p class="explicacao-titulo">Por que se mexeu</p>
-              <p>Subiu após divulgar o rendimento mensal acima do mês anterior,
-                 com a ocupação dos galpões estável.</p>
-            </div>
-          </article>
-        </li>
-      </ul>
+      <!-- Preenchida pelo js/inicio.js: os 3 ativos com maior variação do dia -->
+      <ul class="lista-destaques" id="lista-destaques"></ul>
+      <p class="descricao" id="destaques-vazio" hidden>Cadastre compras na Carteira para ver seus destaques.</p>
     </section>
 
     <!-- Carteira: cada ativo que eu tenho -->
     <section class="carteira" aria-labelledby="titulo-carteira">
       <h2 id="titulo-carteira">Minha carteira</h2>
 
-      <ul class="lista-ativos">
-        <li>
-          <article class="ativo">
-            <h3>Tesouro Selic 2031</h3>
-            <p class="tipo">Tesouro Direto</p>
-            <dl>
-              <dt>Valor atual</dt>
-              <dd>R$ 1.020,00</dd>
-              <dt>Variação</dt>
-              <dd class="positivo">+0,04% hoje</dd>
-            </dl>
-          </article>
-        </li>
-
-        <li>
-          <article class="ativo">
-            <h3>Bitcoin</h3>
-            <p class="tipo">Cripto</p>
-            <dl>
-              <dt>Valor atual</dt>
-              <dd>R$ 230,00</dd>
-              <dt>Variação</dt>
-              <dd class="negativo">-2,10% hoje</dd>
-            </dl>
-          </article>
-        </li>
-      </ul>
+      <!-- Preenchida pelo js/inicio.js: valor atual e variação do dia de cada ativo -->
+      <ul class="lista-ativos" id="inicio-carteira"></ul>
+      <p class="descricao" id="inicio-carteira-vazia" hidden>Nenhuma compra cadastrada ainda.</p>
+      <p><a class="link-carteira" href="carteira.html">Ver carteira completa →</a></p>
     </section>
 
     <!-- Mercado: termômetro geral -->
@@ -177,7 +120,7 @@
   </main>
 
   <footer class="rodape">
-    <p>Dados de exemplo. Não é recomendação de investimento.</p>
+    <p>Não é recomendação de investimento. Cotações da B3 com cerca de 30 min de atraso.</p>
   </footer>
 
 </body>

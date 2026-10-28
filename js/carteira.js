@@ -15,21 +15,7 @@ const mensagem = document.getElementById("mensagem-cadastro");
 const botaoAdicionar = document.getElementById("botao-adicionar");
 
 
-// Formata um número como dinheiro brasileiro: 385 → "R$ 385,00"
-function formatarReais(valor) {
-    return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-// Formata a quantidade sem arredondar demais: 0.0004 → "0,0004"
-function formatarQuantidade(valor) {
-    return valor.toLocaleString("pt-BR", { maximumFractionDigits: 8 });
-}
-
-// O banco guarda a data como "2026-10-01"; na tela mostramos "01/10/2026"
-function formatarData(texto) {
-    const [ano, mes, dia] = texto.split("-");
-    return `${dia}/${mes}/${ano}`;
-}
+// (formatarReais, formatarQuantidade e formatarData estão no js/comum.js)
 
 // Mostra uma mensagem abaixo do botão (verde com ✓, ou vermelha com ✕ se for erro)
 function mostrarMensagem(texto, ehErro) {
@@ -86,12 +72,7 @@ function criarItem(operacao) {
 // ---------------------------------------------------------
 async function carregarOperacoes() {
     try {
-        // fetch sem "method" = GET
-        const resposta = await fetch("/api/operacoes");
-        if (!resposta.ok) {
-            throw new Error(`A API respondeu com o código ${resposta.status}`);
-        }
-        const operacoes = await resposta.json();
+        const operacoes = await buscarOperacoes();   // GET (js/comum.js)
 
         // Histórico: limpa e desenha de novo, uma operação por vez
         listaOperacoes.innerHTML = "";

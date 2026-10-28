@@ -11,7 +11,8 @@
   <!-- Carregado no topo de propósito: aplica o tema antes da página aparecer -->
   <script src="js/tema.js"></script>
   <!-- defer: só roda depois que o HTML inteiro carregar (o formulário já vai existir) -->
-  <!-- A ordem importa: carteira.js usa funções de rendimento.js -->
+  <!-- A ordem importa: comum.js primeiro (funções compartilhadas), depois rendimento.js e carteira.js -->
+  <script src="js/comum.js" defer></script>
   <script src="js/rendimento.js" defer></script>
   <script src="js/carteira.js" defer></script>
 </head>
