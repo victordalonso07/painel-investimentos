@@ -599,7 +599,9 @@ body {
   transition: background-color var(--transicao), border-color var(--transicao);
 }
 
+/* A fonte "(via BOVA11)" fica embaixo do nome */
 .indicador-nome small {
+  display: block;
   color: var(--tinta-suave);
   font-size: 0.8125rem;
 }
@@ -610,6 +612,7 @@ body {
   align-items: baseline;
   gap: 0.5rem;
   text-align: right;
+  white-space: nowrap;           /* valor e variação nunca quebram de linha */
 }
 
 .variacao-pequena {

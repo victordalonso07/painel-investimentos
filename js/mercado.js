@@ -1,7 +1,7 @@
 // =========================================================
 // MERCADO: cotações reais na página Início
-// - Ibovespa e S&P 500: pela NOSSA API (/api/cotacao), usando os ETFs
-//   BOVA11 (copia o Ibovespa) e IVVB11 (copia o S&P 500)
+// - Ibovespa e S&P 500: pela NOSSA API (/api/cotacao): o índice em pontos (^BVSP, ^GSPC)
+//   ou, se não vier, os ETFs BOVA11 e IVVB11, que copiam esses índices
 // - Dólar: AwesomeAPI (grátis, sem chave)
 // - Bitcoin: CoinGecko (grátis, sem chave)
 // =========================================================
@@ -16,17 +16,32 @@ function mostrarVariacao(elemento, variacao) {
 }
 
 // ---------------------------------------------------------
-// Ibovespa e S&P 500: variação do dia pela nossa API
+// Ibovespa e S&P 500: valor e variação do dia pela nossa API
+// Tenta primeiro o ÍNDICE (em pontos). Se a brapi não liberar o índice
+// no plano grátis, usa o ETF que copia o índice (preço em reais).
 // ---------------------------------------------------------
-async function buscarIndice(ativo, idElemento) {
-    const elemento = document.getElementById(idElemento);
-    try {
-        const dados = await buscarCotacaoB3(ativo);   // entra na fila da brapi
-        mostrarVariacao(elemento, dados.variacao);
-    } catch (erro) {
-        elemento.textContent = "Indisponível";
-        console.error(`Falha ao buscar ${ativo}:`, erro);
+async function buscarIndice(tentativas, prefixoId) {
+    const elementoValor = document.getElementById(`${prefixoId}-valor`);
+    const elementoVariacao = document.getElementById(`${prefixoId}-variacao`);
+    const elementoFonte = document.getElementById(`${prefixoId}-fonte`);
+
+    for (const tentativa of tentativas) {
+        try {
+            const dados = await buscarCotacaoB3(tentativa.ativo);   // entra na fila da brapi
+            if (typeof dados.preco !== "number") throw new Error("Resposta sem preço");
+
+            // Índice: "128.450 pts"; ETF: "R$ 128,45"
+            elementoValor.textContent = tentativa.emPontos
+                ? `${dados.preco.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} pts`
+                : formatarReais(dados.preco);
+            mostrarVariacao(elementoVariacao, dados.variacao);
+            elementoFonte.textContent = tentativa.emPontos ? "" : `(via ${tentativa.ativo})`;
+            return;   // deu certo: não precisa tentar a próxima
+        } catch (erro) {
+            console.warn(`Falha ao buscar ${tentativa.ativo}, tentando a próxima opção:`, erro);
+        }
     }
+    elementoValor.textContent = "Indisponível";
 }
 
 // ---------------------------------------------------------
@@ -82,10 +97,10 @@ async function carregarMercado() {
     buscarDolar();
     buscarBitcoin();
 
-    // Os dois ETFs entram na fila da brapi (1 consulta por vez, ver js/comum.js)
+    // Entram na fila da brapi (1 consulta por vez, ver js/comum.js)
     await Promise.all([
-        buscarIndice("BOVA11", "ibovespa-variacao"),
-        buscarIndice("IVVB11", "sp500-variacao"),
+        buscarIndice([{ ativo: "^BVSP", emPontos: true }, { ativo: "BOVA11", emPontos: false }], "ibovespa"),
+        buscarIndice([{ ativo: "^GSPC", emPontos: true }, { ativo: "IVVB11", emPontos: false }], "sp500"),
     ]);
 
     mostrarHorario();

@@ -1,12 +1,15 @@
 // =========================================================
 // API: COTAÇÃO DE UM ATIVO DA B3 (ação, FII, ETF, BDR)
 // Roda no servidor da Vercel, NÃO no navegador.
-// Uso: /api/cotacao?ativo=PETR4
+// Uso: /api/cotacao?ativo=PETR4  (ou um índice: ?ativo=^BVSP)
 // =========================================================
 
 // Responde com um erro em JSON, sempre no mesmo formato: { erro: "..." }
-function responderErro(mensagem, status) {
-    return Response.json({ erro: mensagem }, { status: status });
+// cachear = true: guarda o erro por 30 min (ex.: ativo que não existe no plano grátis),
+// para não gastar consulta da brapi perguntando a mesma coisa a cada F5
+function responderErro(mensagem, status, cachear = false) {
+    const headers = cachear ? { "Cache-Control": "public, s-maxage=1800" } : {};
+    return Response.json({ erro: mensagem }, { status: status, headers: headers });
 }
 
 export default {
@@ -16,8 +19,9 @@ export default {
         const url = new URL(request.url);
         const ativo = url.searchParams.get("ativo");
 
-        // Valida: precisa existir e ter de 4 a 6 letras/números (ex.: PETR4, HGLG11)
-        if (!ativo || !/^[A-Za-z0-9]{4,6}$/.test(ativo)) {
+        // Valida: um ativo com 4 a 6 letras/números (ex.: PETR4, HGLG11)
+        // OU um índice começando com ^ (ex.: ^BVSP = Ibovespa)
+        if (!ativo || !/^(\^[A-Za-z]{3,5}|[A-Za-z0-9]{4,6})$/.test(ativo)) {
             return responderErro("Informe um ativo válido. Exemplo: ?ativo=PETR4", 400);
         }
 
@@ -32,7 +36,7 @@ export default {
 
         try {
             // Pergunta à brapi pela cotação, mandando a chave no cabeçalho (não no endereço)
-            const resposta = await fetch(`https://brapi.dev/api/quote/${ativo.toUpperCase()}`, {
+            const resposta = await fetch(`https://brapi.dev/api/quote/${encodeURIComponent(ativo.toUpperCase())}`, {
                 headers: { Authorization: `Bearer ${chave}` },
             });
 
@@ -43,7 +47,7 @@ export default {
 
             // Qualquer outro erro da brapi (ex.: ativo que não existe)
             if (!resposta.ok) {
-                return responderErro("Ativo não encontrado ou indisponível.", 404);
+                return responderErro("Ativo não encontrado ou indisponível.", 404, true);
             }
 
             // Transforma a resposta da brapi em objeto
@@ -54,7 +58,7 @@ export default {
             const cotacao = dados.results?.[0];
 
             if (!cotacao) {
-                return responderErro("Ativo não encontrado ou indisponível.", 404);
+                return responderErro("Ativo não encontrado ou indisponível.", 404, true);
             }
 
             // Devolve só o que a página precisa, com cache de 30 minutos
