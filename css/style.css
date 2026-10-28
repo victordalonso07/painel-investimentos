@@ -432,6 +432,15 @@ body {
   font-weight: 700;
 }
 
+/* Histórico de compras: título separado das posições, itens mais compactos */
+.titulo-historico {
+  margin-top: calc(var(--espaco) * 2);
+}
+
+.lista-operacoes .posicao h3 {
+  font-size: 1rem;
+}
+
 /* Botão Excluir: discreto (contorno), fica vermelho ao passar o mouse ou ao pedir confirmação */
 .botao-excluir {
   font: inherit;
@@ -685,6 +694,11 @@ body {
   /* Carteira: os quatro números de cada posição lado a lado */
   .posicao dl {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Posição com rendimento: 6 números em 3 colunas */
+  .posicao-resumo dl {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

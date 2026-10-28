@@ -1,6 +1,6 @@
 // =========================================================
 // CARTEIRA: compras salvas no banco (Supabase)
-// - Ao abrir a página: GET /api/operacoes → desenha a lista
+// - Ao abrir a página: GET /api/operacoes → desenha posições (rendimento.js) e histórico
 // - Ao enviar o formulário: POST /api/operacoes → grava e redesenha
 // - Botão Excluir: DELETE /api/operacoes?id=... → apaga e redesenha
 // O navegador nunca fala direto com o banco: sempre pela nossa API.
@@ -8,7 +8,8 @@
 
 // Acha os elementos da página pelo id
 const formCompra = document.getElementById("form-compra");
-const listaPosicoes = document.getElementById("lista-posicoes");
+const listaPosicoes = document.getElementById("lista-posicoes");     // posições (com rendimento)
+const listaOperacoes = document.getElementById("lista-operacoes");   // histórico (cada compra)
 const resumoCarteira = document.getElementById("resumo-carteira");
 const mensagem = document.getElementById("mensagem-cadastro");
 const botaoAdicionar = document.getElementById("botao-adicionar");
@@ -92,21 +93,15 @@ async function carregarOperacoes() {
         }
         const operacoes = await resposta.json();
 
-        // Limpa a lista e desenha de novo, uma operação por vez
-        listaPosicoes.innerHTML = "";
-        let totalInvestido = 0;
+        // Histórico: limpa e desenha de novo, uma operação por vez
+        listaOperacoes.innerHTML = "";
         for (const operacao of operacoes) {
-            listaPosicoes.appendChild(criarItem(operacao));
-            totalInvestido += Number(operacao.quantidade) * Number(operacao.preco_unitario);
+            listaOperacoes.appendChild(criarItem(operacao));
         }
 
-        // Resumo no topo
-        if (operacoes.length === 0) {
-            resumoCarteira.textContent = "Nenhuma compra cadastrada ainda. Use o formulário para adicionar a primeira.";
-        } else {
-            resumoCarteira.textContent =
-                `${operacoes.length} compra(s) cadastrada(s). Total investido: ${formatarReais(totalInvestido)}.`;
-        }
+        // Posições e rendimento (js/rendimento.js): sem "await", para o histórico
+        // aparecer logo enquanto as cotações ainda estão chegando
+        atualizarPosicoes(operacoes, listaPosicoes, resumoCarteira);
     } catch (erro) {
         resumoCarteira.textContent = "Não foi possível carregar suas compras. Tente recarregar a página.";
         console.error("Falha ao carregar operações:", erro);

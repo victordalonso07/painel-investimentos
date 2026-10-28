@@ -11,6 +11,8 @@
   <!-- Carregado no topo de propósito: aplica o tema antes da página aparecer -->
   <script src="js/tema.js"></script>
   <!-- defer: só roda depois que o HTML inteiro carregar (o formulário já vai existir) -->
+  <!-- A ordem importa: carteira.js usa funções de rendimento.js -->
+  <script src="js/rendimento.js" defer></script>
   <script src="js/carteira.js" defer></script>
 </head>
 <body>
@@ -37,14 +39,17 @@
 
   <main class="pagina-carteira">
 
-    <!-- Lista completa: cada compra com quantidade, preço médio e resultado -->
+    <!-- Posições (com rendimento) e histórico: o js/carteira.js preenche ao abrir a página -->
     <section class="carteira-completa" aria-labelledby="titulo-carteira">
       <h2 id="titulo-carteira">Minha carteira</h2>
-      <!-- Resumo e lista vêm do banco: o js/carteira.js preenche ao abrir a página -->
       <p class="descricao" id="resumo-carteira">Carregando suas compras…</p>
 
-      <!-- Começa vazia: cada compra salva vira um <li> aqui -->
+      <!-- Uma posição por ativo: várias compras do mesmo ativo viram uma linha só -->
       <ul class="lista-posicoes" id="lista-posicoes"></ul>
+
+      <h2 class="titulo-historico" id="titulo-historico">Histórico de compras</h2>
+      <!-- Cada compra separada, com o botão Excluir -->
+      <ul class="lista-operacoes" id="lista-operacoes" aria-labelledby="titulo-historico"></ul>
     </section>
 
     <!-- Cadastro de ativo: registrar uma compra nova -->
