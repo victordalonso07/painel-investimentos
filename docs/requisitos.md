@@ -57,7 +57,7 @@ O painel deve reunir os ativos num só lugar, com visual claro, interativo e exp
     dólar e cripto vêm de APIs mais rápidas.
 - **Limitações**
   - CDB, LCI, fundos e previdência não têm API grátis. Se entrarem, o cadastro e a atualização são manuais.
-  - A carteira precisa de um banco de dados na nuvem para aparecer igual no PC e no celular (a definir).
+  - Supabase grátis pausa o projeto após ~1 semana sem uso; reativar em "Restore" no painel (os dados não somem).
 
 ## Fontes de dados
 
@@ -74,8 +74,12 @@ O painel deve reunir os ativos num só lugar, com visual claro, interativo e exp
   Vercel Authentication ("All Deployments"): só entra quem estiver logado na conta da Vercel do dono.
   Na fase do banco de dados, avaliar um serviço que traga banco + login juntos (ex.: Supabase).
 
+- **Banco de dados (28/10/2026):** Supabase (PostgreSQL), plano grátis, região EUA (perto das funções da Vercel).
+  Tabela `operacoes`: cada compra ou venda é uma linha; posições e preço médio são calculados.
+  Esquema registrado em `db/schema.sql`. RLS ligado: só a função do servidor acessa, com a chave secreta.
+
 ## Decisões em aberto
 
-- Qual banco de dados usar para a carteira (e se o login migra junto para esse serviço).
+- Se o login migra da Vercel Authentication para o Supabase Auth (só se houver várias contas).
 - Formato da explicação da IA e qual fonte de notícias usar.
 - Quais gráficos e quais períodos.
