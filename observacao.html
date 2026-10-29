@@ -55,11 +55,6 @@
 
       <form class="form-compra" id="form-observacao">
         <div class="campo">
-          <label for="ativo">Ativo</label>
-          <input type="text" id="ativo" name="ativo" placeholder="Ex.: VALE3" required>
-        </div>
-
-        <div class="campo">
           <label for="tipo">Tipo</label>
           <select id="tipo" name="tipo" required>
             <option value="Ação">Ação</option>
@@ -70,6 +65,18 @@
             <option value="Tesouro Direto">Tesouro Direto</option>
             <option value="Outro">Outro</option>
           </select>
+        </div>
+
+        <!-- Ativo: lista com os 10 principais do tipo escolhido (preenchida pelo js/comum.js).
+             A última opção, "Outro", mostra o campo de texto para digitar qualquer ativo -->
+        <div class="campo">
+          <label for="ativo-lista">Ativo</label>
+          <select id="ativo-lista" name="ativo-lista"></select>
+        </div>
+
+        <div class="campo" id="campo-ativo-outro" hidden>
+          <label for="ativo">Digite o código do ativo</label>
+          <input type="text" id="ativo" name="ativo" placeholder="Ex.: VALE3">
         </div>
 
         <button type="submit" class="botao-primario" id="botao-adicionar">Adicionar à lista</button>

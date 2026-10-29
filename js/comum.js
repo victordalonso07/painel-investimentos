@@ -79,7 +79,7 @@ const IDS_COINGECKO = {
     ETH: "ethereum", ETHEREUM: "ethereum",
     SOL: "solana", SOLANA: "solana",
     BNB: "binancecoin", XRP: "ripple", ADA: "cardano", DOGE: "dogecoin",
-    USDT: "tether", USDC: "usd-coin",
+    USDT: "tether", USDC: "usd-coin", AVAX: "avalanche-2",
 };
 
 // FILA da brapi: o plano grátis aceita 1 consulta por vez.
@@ -188,4 +188,75 @@ async function cotarPosicoes(posicoes, aoChegar) {
     for (const p of posicoes.filter((p) => p.tipo !== "Cripto" && !TIPOS_B3.includes(p.tipo))) {
         aoChegar(p, null);
     }
+}
+
+
+// ---------------------------------------------------------
+// Lista de ativos do formulário (Carteira e Observação)
+// Os 10 principais de cada tipo + "Outro" para digitar qualquer um
+// ---------------------------------------------------------
+const ATIVOS_SUGERIDOS = {
+    "Ação": ["PETR4", "VALE3", "ITUB4", "BBDC4", "BBAS3", "ABEV3", "WEGE3", "B3SA3", "ITSA4", "PRIO3"],
+    "FII": ["MXRF11", "HGLG11", "KNRI11", "XPML11", "VISC11", "KNCR11", "BTLG11", "XPLG11", "HGRU11", "CPTS11"],
+    "ETF": ["BOVA11", "IVVB11", "SMAL11", "BOVV11", "DIVO11", "HASH11", "NASD11", "GOLD11", "SPXI11", "XINA11"],
+    "BDR": ["AAPL34", "MSFT34", "AMZO34", "GOGL34", "NVDC34", "TSLA34", "M1TA34", "NFLX34", "DISB34", "JPMC34"],
+    "Cripto": ["BTC", "ETH", "SOL", "XRP", "BNB", "ADA", "DOGE", "AVAX", "USDT", "USDC"],
+    "Tesouro Direto": [
+        "TESOURO SELIC 2029", "TESOURO SELIC 2031", "TESOURO PREFIXADO 2029", "TESOURO PREFIXADO 2031",
+        "TESOURO IPCA+ 2029", "TESOURO IPCA+ 2035", "TESOURO IPCA+ 2045",
+        "TESOURO IPCA+ COM JUROS SEMESTRAIS 2035", "TESOURO RENDA+ 2065", "TESOURO EDUCA+ 2035",
+    ],
+    "Outro": [],   // sem lista: só o campo de texto
+};
+
+const OPCAO_OUTRO = "__outro__";   // valor especial da opção "Outro (digitar)"
+
+// Liga o seletor de Tipo ao de Ativo: trocar o tipo troca a lista de ativos.
+// Escolher "Outro (digitar)" mostra o campo de texto.
+function configurarSeletorAtivo(formulario) {
+    const tipo = formulario.querySelector("#tipo");
+    const lista = formulario.querySelector("#ativo-lista");
+    const campoOutro = formulario.querySelector("#campo-ativo-outro");
+    const texto = formulario.querySelector("#ativo");
+
+    // Mostra ou esconde o campo de texto, conforme a opção escolhida
+    function atualizarCampoOutro() {
+        const digitar = lista.value === OPCAO_OUTRO;
+        campoOutro.hidden = !digitar;
+        texto.required = digitar;   // só é obrigatório quando aparece
+    }
+
+    // Recria as opções da lista para o tipo escolhido
+    function preencherLista() {
+        lista.innerHTML = "";
+        for (const ativo of ATIVOS_SUGERIDOS[tipo.value] ?? []) {
+            // new Option(texto, valor): cria um <option> sem usar innerHTML
+            lista.appendChild(new Option(ativo, ativo));
+        }
+        lista.appendChild(new Option("Outro (digitar)", OPCAO_OUTRO));
+        atualizarCampoOutro();
+    }
+
+    tipo.addEventListener("change", preencherLista);
+    lista.addEventListener("change", () => {
+        atualizarCampoOutro();
+        if (lista.value === OPCAO_OUTRO) texto.focus();
+    });
+    // Depois do formulário.reset(), a lista volta a ser a do tipo inicial (Ação)
+    formulario.addEventListener("reset", () => setTimeout(preencherLista));
+
+    preencherLista();
+}
+
+// Lê o ativo escolhido: da lista, ou do campo de texto se for "Outro"
+function lerAtivo(formulario) {
+    const lista = formulario.querySelector("#ativo-lista");
+    const valor = lista.value === OPCAO_OUTRO ? formulario.querySelector("#ativo").value : lista.value;
+    return valor.trim().toUpperCase();
+}
+
+// Põe o cursor no campo de ativo que estiver visível
+function focarAtivo(formulario) {
+    const lista = formulario.querySelector("#ativo-lista");
+    (lista.value === OPCAO_OUTRO ? formulario.querySelector("#ativo") : lista).focus();
 }

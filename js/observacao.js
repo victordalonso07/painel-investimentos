@@ -165,7 +165,7 @@ formObservacao.addEventListener("submit", async (evento) => {
 
     try {
         const { ok, dados } = await enviarJSON("/api/observacao", "POST", {
-            ativo: document.getElementById("ativo").value.trim().toUpperCase(),
+            ativo: lerAtivo(formObservacao),
             tipo_ativo: document.getElementById("tipo").value,
         });
         if (!ok) {
@@ -173,7 +173,7 @@ formObservacao.addEventListener("submit", async (evento) => {
             return;
         }
         formObservacao.reset();
-        document.getElementById("ativo").focus();
+        focarAtivo(formObservacao);
         mostrarMensagemObs(`${dados.ativo} adicionado à lista.`, false);
         await carregarObservacao();
     } catch (erro) {
@@ -185,3 +185,6 @@ formObservacao.addEventListener("submit", async (evento) => {
 });
 
 carregarObservacao();
+
+// Lista de ativos por tipo, com "Outro (digitar)" (js/comum.js)
+configurarSeletorAtivo(formObservacao);

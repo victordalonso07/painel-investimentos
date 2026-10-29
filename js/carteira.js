@@ -149,7 +149,7 @@ formCompra.addEventListener("submit", async (evento) => {
     // Monta o objeto com os MESMOS nomes das colunas da tabela "operacoes"
     const novaOperacao = {
         tipo_operacao: document.getElementById("operacao").value,
-        ativo: document.getElementById("ativo").value.trim().toUpperCase(),
+        ativo: lerAtivo(formCompra),
         tipo_ativo: document.getElementById("tipo").value,
         quantidade: Number(document.getElementById("quantidade").value),
         preco_unitario: Number(document.getElementById("preco").value),
@@ -193,7 +193,7 @@ formCompra.addEventListener("submit", async (evento) => {
 
         // Deu certo (201): limpa o formulário e redesenha a lista com o que está no banco
         formCompra.reset();
-        document.getElementById("ativo").focus();
+        focarAtivo(formCompra);
         mostrarMensagem(`${nomeOperacaoDe(dados)} de ${dados.ativo} cadastrada.`, false);
         await carregarOperacoes();
     } catch (erro) {
@@ -208,3 +208,6 @@ formCompra.addEventListener("submit", async (evento) => {
 
 // Começa: busca as compras assim que a página abre
 carregarOperacoes();
+
+// Lista de ativos por tipo, com "Outro (digitar)" (js/comum.js)
+configurarSeletorAtivo(formCompra);
