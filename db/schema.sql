@@ -22,3 +22,17 @@ create table operacoes (
 -- Segurança: a tabela nasce trancada (ninguém lê nem escreve pelo acesso público).
 -- Só a função do servidor (api/operacoes.js), com a chave secreta, consegue acessar.
 alter table operacoes enable row level security;
+
+-- Lista de observação: ativos que você acompanha sem ter na carteira.
+-- "unique" no ativo: o mesmo ativo não entra duas vezes.
+-- mostrar_inicio: se aparece também na página Início.
+create table observacao (
+  id bigint generated always as identity primary key,
+  ativo text not null unique check (char_length(ativo) between 1 and 40),
+  tipo_ativo text not null check (tipo_ativo in ('Ação', 'FII', 'ETF', 'BDR', 'Cripto', 'Tesouro Direto', 'Outro')),
+  mostrar_inicio boolean not null default true,
+  criado_em timestamptz not null default now()
+);
+
+-- Mesma regra da outra tabela: trancada, só a função do servidor acessa.
+alter table observacao enable row level security;

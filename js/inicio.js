@@ -139,4 +139,47 @@ async function carregarInicio() {
     avisoDestaquesVazio.hidden = destaques.length > 0;
 }
 
-carregarInicio();
+// ---------------------------------------------------------
+// Em observação: ativos da lista marcados "Mostrar no Início"
+// ---------------------------------------------------------
+async function carregarObservacaoInicio() {
+    const secao = document.getElementById("secao-observacao");
+    const lista = document.getElementById("inicio-observacao");
+    let registros;
+    try {
+        registros = (await buscarObservacao()).filter((r) => r.mostrar_inicio);
+    } catch (erro) {
+        console.error("Falha ao carregar a observação:", erro);
+        return;   // a seção continua escondida
+    }
+    if (registros.length === 0) return;
+
+    const itens = new Map();
+    for (const registro of registros) {
+        // Mesmo formato da lista "Minha carteira", trocando "Valor atual" por "Preço"
+        const item = criarItemCarteira({ ativo: registro.ativo, tipo: registro.tipo_ativo });
+        item.querySelector("dt").textContent = "Preço";
+        itens.set(registro.ativo, item);
+        lista.appendChild(item);
+    }
+    secao.hidden = false;
+
+    const ativos = registros.map((r) => ({ ativo: r.ativo, tipo: r.tipo_ativo }));
+    await cotarPosicoes(ativos, (ativo, cotacao) => {
+        const item = itens.get(ativo.ativo);
+        const campoValor = item.querySelector(".campo-valor");
+        if (!cotacao || typeof cotacao.preco !== "number") {
+            campoValor.textContent = "Sem cotação";
+            return;
+        }
+        campoValor.textContent = formatarReais(cotacao.preco);
+        if (typeof cotacao.variacao === "number") {
+            const campoVariacao = item.querySelector(".campo-variacao");
+            campoVariacao.textContent = `${formatarPercentual(cotacao.variacao)} hoje`;
+            pintarSinal(campoVariacao, cotacao.variacao);
+        }
+    });
+}
+
+// A carteira vem primeiro; a observação entra logo depois (a fila da brapi organiza a ordem)
+carregarInicio().then(carregarObservacaoInicio);

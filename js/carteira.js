@@ -93,7 +93,7 @@ async function carregarOperacoes() {
 
         // Posições e rendimento (js/rendimento.js): sem "await", para o histórico
         // aparecer logo enquanto as cotações ainda estão chegando
-        atualizarPosicoes(operacoes, listaPosicoes, resumoCarteira);
+        atualizarPosicoes(operacoes, listaPosicoes, resumoCarteira).then(mostrarHorario);
     } catch (erro) {
         resumoCarteira.textContent = "Não foi possível carregar suas compras. Tente recarregar a página.";
         console.error("Falha ao carregar operações:", erro);

@@ -104,6 +104,11 @@ h2 {
   margin-bottom: var(--espaco);
 }
 
+/* Atributo hidden sempre esconde, mesmo se outra regra mudar o "display" */
+[hidden] {
+  display: none !important;
+}
+
 /* Foco do teclado (tecla Tab): contorno laranja bem visível */
 :focus-visible {
   outline: 3px solid var(--laranja);
@@ -478,6 +483,33 @@ body {
 .botao-excluir:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+/* Página Observação: caixa "Mostrar no Início" e botão Remover lado a lado */
+.acoes-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem var(--espaco);
+  margin-top: 0.75rem;
+}
+
+.acoes-item .botao-excluir {
+  margin-top: 0;
+}
+
+.opcao-inicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.opcao-inicio input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--laranja);   /* a marcação da caixa fica laranja */
 }
 
 /* =========================================================

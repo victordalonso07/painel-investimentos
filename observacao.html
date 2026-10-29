@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observação | Painel de Investimentos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Carregado no topo de propósito: aplica o tema antes da página aparecer -->
+  <script src="js/tema.js"></script>
+  <!-- A ordem importa: comum.js primeiro (funções compartilhadas) -->
+  <script src="js/comum.js" defer></script>
+  <script src="js/observacao.js" defer></script>
+</head>
+<body>
+
+  <header class="topo">
+    <h1>Painel de Investimentos</h1>
+    <!-- Menu de navegação: no PC fica no topo; no celular, barra fixa embaixo -->
+    <nav class="menu" aria-label="Menu principal">
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="carteira.html">Carteira</a></li>
+        <!-- Esta é a página atual -->
+        <li><a href="observacao.html" aria-current="page">Observação</a></li>
+      </ul>
+    </nav>
+    <div class="topo-acoes">
+      <p class="atualizado">Atualizado às <time id="horario-atualizacao">--:--</time></p>
+      <button type="button" class="botao-tema" id="botao-tema" aria-pressed="false">
+        Modo escuro
+      </button>
+    </div>
+  </header>
+
+  <!-- pagina-carteira: reaproveita o mesmo visual da página Carteira -->
+  <main class="pagina-carteira">
+
+    <!-- Lista: preenchida pelo js/observacao.js com preço e variação do dia -->
+    <section class="carteira-completa" aria-labelledby="titulo-observacao">
+      <h2 id="titulo-observacao">Lista de observação</h2>
+      <p class="descricao" id="resumo-observacao">Carregando sua lista…</p>
+      <ul class="lista-posicoes" id="lista-observacao"></ul>
+    </section>
+
+    <!-- Cadastro: adicionar um ativo para acompanhar -->
+    <section class="cadastro" aria-labelledby="titulo-adicionar">
+      <h2 id="titulo-adicionar">Acompanhar ativo</h2>
+      <p class="descricao">
+        Ativos que você quer acompanhar sem ter comprado.
+        Marque "Mostrar no Início" para vê-los na página principal.
+      </p>
+
+      <form class="form-compra" id="form-observacao">
+        <div class="campo">
+          <label for="ativo">Ativo</label>
+          <input type="text" id="ativo" name="ativo" placeholder="Ex.: VALE3" required>
+        </div>
+
+        <div class="campo">
+          <label for="tipo">Tipo</label>
+          <select id="tipo" name="tipo" required>
+            <option value="Ação">Ação</option>
+            <option value="FII">Fundo imobiliário (FII)</option>
+            <option value="ETF">ETF</option>
+            <option value="BDR">BDR</option>
+            <option value="Cripto">Cripto</option>
+            <option value="Tesouro Direto">Tesouro Direto</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+
+        <button type="submit" class="botao-primario" id="botao-adicionar">Adicionar à lista</button>
+        <p class="mensagem-cadastro" id="mensagem-observacao" role="status"></p>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="rodape">
+    <p>Não é recomendação de investimento. Cotações da B3 com cerca de 30 min de atraso.</p>
+  </footer>
+
+</body>
+</html>

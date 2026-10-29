@@ -77,6 +77,7 @@ O painel deve reunir os ativos num só lugar, com visual claro, interativo e exp
 - **Banco de dados (28/10/2026):** Supabase (PostgreSQL), plano grátis, região EUA (perto das funções da Vercel).
   Tabela `operacoes`: cada compra ou venda é uma linha; posições e preço médio são calculados.
   Esquema registrado em `db/schema.sql`. RLS ligado: só a função do servidor acessa, com a chave secreta.
+  Tabela `observacao` (29/10/2026): ativos acompanhados sem estar na carteira, com a opção "mostrar no Início".
 
 ## Decisões em aberto
 

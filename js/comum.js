@@ -47,6 +47,16 @@ function pintarSinal(elemento, valor) {
 }
 
 
+// Mostra a hora da última atualização no topo da página ("Atualizado às 14:05")
+function mostrarHorario() {
+    const elemento = document.getElementById("horario-atualizacao");
+    if (!elemento) return;
+    const agora = new Date();
+    elemento.textContent = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    elemento.dateTime = agora.toISOString();
+}
+
+
 // ---------------------------------------------------------
 // Busca de dados
 // ---------------------------------------------------------
@@ -103,6 +113,11 @@ async function buscarCotacoesCripto(siglas) {
 // Operações salvas no banco (pela nossa /api/operacoes)
 function buscarOperacoes() {
     return buscarJSON("/api/operacoes");
+}
+
+// Lista de observação (pela nossa /api/observacao)
+function buscarObservacao() {
+    return buscarJSON("/api/observacao");
 }
 
 

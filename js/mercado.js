@@ -6,7 +6,7 @@
 // - Bitcoin: CoinGecko (grátis, sem chave)
 // =========================================================
 
-// (formatarReais, formatarPercentual, buscarJSON e buscarCotacaoB3 estão no js/comum.js)
+// (formatarReais, formatarPercentual, buscarCotacaoB3 e mostrarHorario estão no js/comum.js)
 
 // Mostra a variação num elemento e pinta de verde (alta) ou vermelho (baixa).
 // As classes "positivo" e "negativo" já existem no CSS (com as setas ▲ ▼)
@@ -77,16 +77,6 @@ async function buscarBitcoin() {
         elementoValor.textContent = "Indisponível";
         console.error("Falha ao buscar o Bitcoin:", erro);
     }
-}
-
-// ---------------------------------------------------------
-// Mostra a hora da última atualização no topo da página
-// ---------------------------------------------------------
-function mostrarHorario() {
-    const elemento = document.getElementById("horario-atualizacao");
-    const agora = new Date();
-    elemento.textContent = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    elemento.dateTime = agora.toISOString();
 }
 
 // ---------------------------------------------------------

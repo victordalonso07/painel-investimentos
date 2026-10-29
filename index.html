@@ -27,7 +27,6 @@
         <!-- aria-current="page" marca a página atual (o CSS destaca) -->
         <li><a href="index.html" aria-current="page">Início</a></li>
         <li><a href="carteira.html">Carteira</a></li>
-        <!-- Ainda não existe: vai dar erro 404 até criarmos a página -->
         <li><a href="observacao.html">Observação</a></li>
       </ul>
     </nav>
@@ -83,6 +82,13 @@
       <ul class="lista-ativos" id="inicio-carteira"></ul>
       <p class="descricao" id="inicio-carteira-vazia" hidden>Nenhuma compra cadastrada ainda.</p>
       <p><a class="link-carteira" href="carteira.html">Ver carteira completa →</a></p>
+    </section>
+
+    <!-- Em observação: só aparece se algum ativo da lista estiver marcado "Mostrar no Início" -->
+    <section class="carteira observacao-inicio" id="secao-observacao" aria-labelledby="titulo-observacao-inicio" hidden>
+      <h2 id="titulo-observacao-inicio">Em observação</h2>
+      <ul class="lista-ativos" id="inicio-observacao"></ul>
+      <p><a class="link-carteira" href="observacao.html">Ver lista completa →</a></p>
     </section>
 
     <!-- Mercado: termômetro geral -->
