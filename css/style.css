@@ -288,6 +288,7 @@ body {
 .lista-destaques {
   display: grid;
   gap: var(--espaco);
+  align-items: start;   /* cada cartão com a própria altura (sem isso, todos esticam igual ao maior) */
 }
 
 .destaque {
