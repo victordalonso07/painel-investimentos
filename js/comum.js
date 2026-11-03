@@ -184,10 +184,43 @@ async function cotarPosicoes(posicoes, aoChegar) {
         }
     }
 
-    // Tesouro Direto e Outro: ainda sem fonte de preço
-    for (const p of posicoes.filter((p) => p.tipo !== "Cripto" && !TIPOS_B3.includes(p.tipo))) {
+    // Tesouro Direto: uma consulta traz todos os títulos (/api/tesouro)
+    const titulos = posicoes.filter((p) => p.tipo === "Tesouro Direto");
+    if (titulos.length > 0) {
+        let precos = new Map();
+        try {
+            precos = await buscarPrecosTesouro();
+        } catch (erro) {
+            console.error("Falha ao buscar preços do Tesouro:", erro);
+        }
+        for (const p of titulos) aoChegar(p, precos.get(nomeTesouro(p.ativo)) ?? null);
+    }
+
+    // Outro (CDB, LCI...): sem fonte de preço grátis
+    for (const p of posicoes.filter((p) => p.tipo === "Outro")) {
         aoChegar(p, null);
     }
+}
+
+// "tesouro  selic 2031" → "TESOURO SELIC 2031": maiúsculo e com espaços simples, para comparar nomes
+function nomeTesouro(texto) {
+    return texto.toUpperCase().replace(/\s+/g, " ").trim();
+}
+
+// Busca os preços do Tesouro UMA vez por página e reaproveita (a planilha é grande).
+// Guardamos a "promessa": se duas partes da página pedirem juntas, as duas esperam a mesma busca
+let promessaTesouro = null;
+function buscarPrecosTesouro() {
+    promessaTesouro ??= buscarJSON("/api/tesouro").then((dados) => {
+        const precos = new Map();
+        for (const titulo of dados.titulos) {
+            precos.set(nomeTesouro(titulo.nome), { preco: titulo.preco, variacao: titulo.variacao });
+        }
+        return precos;
+    });
+    // Se der erro, esquece a promessa para tentar de novo na próxima vez
+    promessaTesouro.catch(() => { promessaTesouro = null; });
+    return promessaTesouro;
 }
 
 
