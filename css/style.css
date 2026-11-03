@@ -430,11 +430,19 @@ body {
 }
 
 /* "Analisando os ativos em destaque hoje..." com os pontinhos aparecendo um de cada vez */
-.carregando {
+/* ".destaques .carregando" (2 classes) vence ".destaques .descricao", que deixava o texto cinza */
+.destaques .carregando {
+  display: inline-block;
   font-weight: 700;
+  color: var(--laranja);              /* texto laranja, não cinza como as descrições */
+  background: var(--laranja-fundo);   /* fundo laranja clarinho (no escuro, um tom mais fechado) */
+  border-left: 4px solid var(--laranja);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
 }
 
 .pontinhos span {
+  font-size: 1.25em;                  /* pontinhos um pouco maiores */
   animation: pontinho 1.4s infinite;
   opacity: 0;
 }
