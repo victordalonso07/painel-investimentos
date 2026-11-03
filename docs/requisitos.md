@@ -84,3 +84,17 @@ O painel deve reunir os ativos num só lugar, com visual claro, interativo e exp
 - Se o login migra da Vercel Authentication para o Supabase Auth (só se houver várias contas).
 - Formato da explicação da IA e qual fonte de notícias usar.
 - Quais gráficos e quais períodos.
+
+## Situação em 03/11/2026
+
+**Feito**
+- Must have: login (Vercel Authentication), cotações, carteira com rendimento, responsivo, IA explicando os ativos.
+- Should have: lista de observação e gráficos de histórico (5 dias, 1 mês e 3 meses, limite do plano grátis da brapi).
+- Extras: vendas e taxas, edição de operações, conferência de saldo no servidor, Tesouro Direto pelos dados abertos.
+
+**Falta (Could have e melhorias)**
+- Lucro realizado das vendas (hoje a venda reduz a posição, mas o lucro dela não aparece separado).
+- Chat com IA / agente que consulta a carteira (com limite de perguntas por dia).
+- Seção "Explorar" (tipos de ativo explicados).
+- Alertas e trailing stop com regras definidas pelo usuário.
+- Modo demonstração com dados fictícios, para mostrar o projeto sem expor a carteira.
