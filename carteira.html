@@ -14,7 +14,8 @@
   <!-- A ordem importa: comum.js primeiro (funções compartilhadas), depois rendimento.js e carteira.js -->
   <script src="js/comum.js" defer></script>
   <!-- Chart.js: biblioteca que desenha os gráficos (versão fixa, de um servidor confiável) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" defer></script>
+  <!-- integrity: o navegador só roda o arquivo se ele for exatamente este (protege se o CDN for adulterado) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous" defer></script>
   <script src="js/grafico.js" defer></script>
   <script src="js/rendimento.js" defer></script>
   <script src="js/carteira.js" defer></script>
