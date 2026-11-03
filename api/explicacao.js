@@ -68,6 +68,45 @@ async function buscarNoticias(ativo) {
       return noticias;
 }
 
+
+// Manda as regras + a pergunta para o Gemini e devolve o texto da resposta
+async function perguntarIA(pergunta) {
+    const chave = process.env.GEMINI_API_KEY;   // pega a chave no cofre da Vercel
+    if (!chave) {
+        throw new Error("A variável GEMINI_API_KEY não está configurada na Vercel.");
+    }
+
+    const endereco = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
+
+    const resposta = await fetch(endereco, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": chave,   // a chave vai no cabeçalho, nunca no endereço
+        },
+        body: JSON.stringify({
+            system_instruction: { parts: [{ text: REGRAS }] },   // as regras fixas
+            contents: [{ parts: [{ text: pergunta }] }],         // a pergunta do dia
+            generationConfig: { temperature: 0.3 },              // 0.3 = mais objetiva, menos "criativa"
+        }),
+    });
+
+    if (!resposta.ok) {
+        // O detalhe do erro fica só no registro do servidor (pode conter dados internos)
+        console.error("Gemini respondeu com erro:", resposta.status, await resposta.text());
+        throw new Error(`Gemini respondeu ${resposta.status}`);
+    }
+
+    const dados = await resposta.json();
+    // A resposta vem "embrulhada": candidates → content → parts → text
+    const texto = dados.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
+    if (!texto) {
+        throw new Error("Gemini não devolveu texto.");
+    }
+    return texto;
+}
+
+
 export default {
     async fetch(request) {
         const url = new URL(request.url);
