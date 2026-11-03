@@ -9,7 +9,7 @@ function responderErro(mensagem, status) {
 }
 
 // O RSS troca alguns símbolos por códigos (ex.: "&amp;" no lugar de "&"). Aqui desfazemos isso
-funtion limparTexto(texto) {
+function limparTexto(texto) {
     return texto
         .replace(/<!\[CDATA\[|\]\]>/g, "")
         .replace(/&amp;/g, "&")
@@ -21,7 +21,7 @@ funtion limparTexto(texto) {
 }
 
 // Busca as manchetes das últimas 24 h sobre o ativo no Google Notícias
-async funtion buscarNoticias(ativo) {
+async function buscarNoticias(ativo) {
      // "when:1d" = só notícias do último dia
      const busca = encodeURIComponent(`${ativo} when:1d`);
      const endereco = `https://news.google.com/rss/search?q=${busca}&hl=pt-BR&gl=BR&ceid=BR:pt-419`
@@ -39,7 +39,7 @@ async funtion buscarNoticias(ativo) {
         const titulo = item.match(/<title>([\s\S]*?)<\/title>/)?.[1];
         const fonte = item.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1];
         if (titulo) {
-            noticia.push({titulo: limparTexto(titulo), fonte: fonte ? limparTexto(fonte) : ""});
+            noticias.push({titulo: limparTexto(titulo), fonte: fonte ? limparTexto(fonte) : ""});
         }
       }
       return noticias;
@@ -58,7 +58,7 @@ export default {
     try {
         const noticias = await buscarNoticias(ativo.toUpperCase());
         // Por enquanto só devolve as notícias, para testarmos esta parte
-        retunr Response.json({ativo: ativo.toUpperCase(), noticias: noticias });
+        return Response.json({ativo: ativo.toUpperCase(), noticias: noticias });
         } catch (erro) {
             console.error("Falha ao buscar notícias:", erro);
             return responderErro("Não foi possível buscar notícias.", 502);
