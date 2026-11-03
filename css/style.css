@@ -458,6 +458,17 @@ body {
   100%      { opacity: 0; }   /* some para recomeçar */
 }
 
+/* Início: Minha carteira, Em observação e Mercado, cada um no seu cartão
+   (mesmo visual do cartão de cadastro), para as seções não ficarem "soltas" na página */
+.carteira,
+.observacao-inicio,
+.mercado {
+  padding: calc(var(--espaco) * 1.25);
+  background: var(--superficie);
+  border: 2px solid var(--linha);
+  border-radius: 0.75rem;
+}
+
 /* =========================================================
    6b. PÁGINA CARTEIRA: lista completa
    ========================================================= */
@@ -792,6 +803,7 @@ body {
 .lista-indicadores li {
   display: flex;
   justify-content: space-between;
+  gap: var(--espaco);            /* nome e valor nunca encostam */
   padding: 0.75rem;
   border-bottom: 1px solid var(--linha);
   border-left: 3px solid transparent;
@@ -890,6 +902,25 @@ body {
 
   .lista-destaques {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Página Início, parte de baixo: duas colunas fixas
+     esquerda = Minha carteira e, embaixo dela, Em observação
+     direita  = Mercado (ocupa a altura das duas da esquerda) */
+  .carteira,
+  .observacao-inicio {
+    grid-column: 1;
+  }
+
+  .mercado {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+    align-self: start;
+  }
+
+  /* Na página Início, a coluna da direita é um pouco mais larga (cabe o Mercado sem apertar) */
+  main.pagina-inicio {
+    grid-template-columns: 3fr 2fr;
   }
 }
 

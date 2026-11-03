@@ -45,8 +45,13 @@ function limparTexto(texto) {
 
 // Busca as manchetes das últimas 24 h sobre o ativo no Google Notícias
 async function buscarNoticias(ativo) {
+     // Tesouro: notícia sobre "TESOURO SELIC 2029" quase não existe; buscamos o tipo do título
+     // (sem o ano) e as taxas do Tesouro Direto em geral, que é o que move esses preços
+     const termo = ativo.startsWith("TESOURO")
+         ? `"${ativo.replace(/\s*\d{4}$/, "")}" OR "Tesouro Direto" taxas`
+         : ativo;
      // "when:1d" = só notícias do último dia
-     const busca = encodeURIComponent(`${ativo} when:1d`);
+     const busca = encodeURIComponent(`${termo} when:1d`);
      const endereco = `https://news.google.com/rss/search?q=${busca}&hl=pt-BR&gl=BR&ceid=BR:pt-419`
 
      const resposta = await fetch(endereco);
@@ -113,8 +118,8 @@ export default {
         const ativo = url.searchParams.get("ativo");
         const direcao = url.searchParams.get("direcao");   // "alta" ou "queda"
 
-        // Valida o ativo (2 a 10 letras/números) e a direção (só esses dois valores)
-        if (!ativo || !/^[A-Za-z0-9]{2,10}$/.test(ativo)) {
+        // Valida o ativo: letras, números, espaço e "+" (para títulos como "TESOURO IPCA+ 2035"), até 40
+        if (!ativo || !/^[A-Za-z0-9+ ]{2,40}$/.test(ativo.trim())) {
             return responderErro("Informe um ativo válido. Exemplo: ?ativo=PETR4&direcao=alta", 400);
         }
         if (direcao !== "alta" && direcao !== "queda") {
@@ -122,7 +127,7 @@ export default {
         }
 
         try {
-            const ativoMaiusculo = ativo.toUpperCase();
+            const ativoMaiusculo = ativo.trim().replace(/\s+/g, " ").toUpperCase();
             const noticias = await buscarNoticias(ativoMaiusculo);                       // parte 1
             const pergunta = montarPergunta(ativoMaiusculo, direcao, noticias);          // parte 2a
             const explicacao = await perguntarIA(pergunta);                              // parte 2b
