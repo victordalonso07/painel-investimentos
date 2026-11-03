@@ -14,6 +14,14 @@ const avisoCarteiraVazia = document.getElementById("inicio-carteira-vazia");
 const listaDestaques = document.getElementById("lista-destaques");
 const avisoDestaquesVazio = document.getElementById("destaques-vazio");
 
+// Variação do dia de cada ativo seu (carteira e observação), usada nos destaques
+const variacoesConhecidas = new Map();
+function guardarVariacao(ativo, variacao, origem) {
+    if (!variacoesConhecidas.has(ativo.ativo)) {   // se está nos dois, vale "Na sua carteira"
+        variacoesConhecidas.set(ativo.ativo, { ativo: ativo.ativo, tipo: ativo.tipo, variacao, origem });
+    }
+}
+
 
 // Um <li> da lista "Minha carteira": valor atual e variação do dia
 function criarItemCarteira(posicao) {
@@ -50,7 +58,8 @@ function criarItemDestaque(posicao) {
         </article>
     `;
     item.querySelector("h3").textContent = posicao.ativo;
-    item.querySelector(".tipo").textContent = posicao.tipo;
+    // Ex.: "Ação · Na sua carteira" ou "Ação · Destaque da bolsa"
+    item.querySelector(".tipo").textContent = `${posicao.tipo} · ${posicao.origem}`;
     const variacao = item.querySelector(".variacao");
     variacao.textContent = `${formatarPercentual(posicao.variacao)} hoje`;
     pintarSinal(variacao, posicao.variacao);
@@ -98,7 +107,6 @@ async function carregarInicio() {
         campoHoje.textContent = "—";
         campoRendimento.textContent = "—";
         avisoCarteiraVazia.hidden = false;
-        avisoDestaquesVazio.hidden = false;
         return;
     }
 
@@ -114,7 +122,6 @@ async function carregarInicio() {
     let patrimonio = 0;     // valor atual de tudo
     let ganhoHoje = 0;      // quanto a carteira subiu ou caiu hoje, em R$
     let baseHoje = 0;       // quanto valia "ontem" (para calcular o % do dia)
-    const comVariacao = []; // posições com variação do dia, para os destaques
 
     await cotarPosicoes(posicoes, (posicao, cotacao) => {
         const item = itens.get(posicao.ativo);
@@ -140,7 +147,7 @@ async function carregarInicio() {
             const valorOntem = valorAtual / (1 + cotacao.variacao / 100);
             ganhoHoje += valorAtual - valorOntem;
             baseHoje += valorOntem;
-            comVariacao.push({ ...posicao, variacao: cotacao.variacao });
+            guardarVariacao(posicao, cotacao.variacao, "Na sua carteira");
         }
     });
 
@@ -148,13 +155,6 @@ async function carregarInicio() {
     campoPatrimonio.textContent = formatarReais(patrimonio);
     mostrarNoResumo(campoHoje, ganhoHoje, baseHoje);
     mostrarNoResumo(campoRendimento, patrimonio - totalInvestido, totalInvestido);
-
-    // Destaques: os 3 que mais se mexeram, para cima OU para baixo (Math.abs ignora o sinal)
-    const destaques = comVariacao
-        .sort((a, b) => Math.abs(b.variacao) - Math.abs(a.variacao))
-        .slice(0, 3);
-    for (const posicao of destaques) listaDestaques.appendChild(criarItemDestaque(posicao));
-    avisoDestaquesVazio.hidden = destaques.length > 0;
 }
 
 // ---------------------------------------------------------
@@ -195,9 +195,45 @@ async function carregarObservacaoInicio() {
             const campoVariacao = item.querySelector(".campo-variacao");
             campoVariacao.textContent = `${formatarPercentual(cotacao.variacao)} hoje`;
             pintarSinal(campoVariacao, cotacao.variacao);
+            guardarVariacao(ativo, cotacao.variacao, "Em observação");
         }
     });
 }
 
-// A carteira vem primeiro; a observação entra logo depois (a fila da brapi organiza a ordem)
-carregarInicio().then(carregarObservacaoInicio);
+// ---------------------------------------------------------
+// Destaques do dia: os 3 ativos que mais se mexeram (para cima OU para baixo)
+// 1º os SEUS (carteira e observação); se faltar, completa com as principais ações da bolsa
+// ---------------------------------------------------------
+async function carregarDestaques() {
+    // Os seus que já têm variação (guardados pela carteira e pela observação)
+    const pessoais = [...variacoesConhecidas.values()];
+
+    // Principais ações da bolsa (lista do js/comum.js), tirando as que já são suas
+    const mercado = [];
+    if (pessoais.length < 3) {
+        const candidatos = ATIVOS_SUGERIDOS["Ação"]
+            .filter((ativo) => !variacoesConhecidas.has(ativo))
+            .map((ativo) => ({ ativo: ativo, tipo: "Ação" }));
+        await cotarPosicoes(candidatos, (ativo, cotacao) => {
+            if (typeof cotacao?.variacao === "number") {
+                mercado.push({ ...ativo, variacao: cotacao.variacao, origem: "Destaque da bolsa" });
+            }
+        });
+    }
+
+    // Math.abs ignora o sinal: -4% "mexeu mais" que +2%
+    const porMovimento = (a, b) => Math.abs(b.variacao) - Math.abs(a.variacao);
+    const destaques = [...pessoais.sort(porMovimento), ...mercado.sort(porMovimento)].slice(0, 3);
+
+    for (const destaque of destaques) listaDestaques.appendChild(criarItemDestaque(destaque));
+    if (destaques.length > 0) {
+        avisoDestaquesVazio.hidden = true;
+    } else {
+        avisoDestaquesVazio.textContent = "Não foi possível buscar os destaques agora. Tente recarregar mais tarde.";
+    }
+}
+
+// Ordem: carteira → observação → destaques (os destaques usam as variações das duas primeiras)
+carregarInicio()
+    .then(carregarObservacaoInicio)
+    .then(carregarDestaques);
