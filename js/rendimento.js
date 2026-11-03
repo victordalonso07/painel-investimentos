@@ -34,6 +34,8 @@ function criarItemPosicao(posicao) {
     item.querySelector(".campo-quantidade").textContent = formatarQuantidade(posicao.quantidade);
     item.querySelector(".campo-preco-medio").textContent = formatarReais(posicao.precoMedio);
     item.querySelector(".campo-investido").textContent = formatarReais(posicao.custo);
+    // Botão "Ver gráfico" (js/grafico.js)
+    item.querySelector("article").appendChild(criarBotaoGrafico({ ativo: posicao.ativo, tipo: posicao.tipo }));
     return item;
 }
 

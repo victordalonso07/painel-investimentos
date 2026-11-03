@@ -567,6 +567,118 @@ body {
   accent-color: var(--laranja);   /* a marcação da caixa fica laranja */
 }
 
+/* Botão "Ver gráfico" nos cartões da Carteira e da Observação */
+.botao-grafico {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--laranja);
+  background: var(--laranja-fundo);
+  border: 2px solid var(--laranja);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  margin-top: 0.75rem;
+  cursor: pointer;
+  transition: filter var(--transicao);
+}
+
+.botao-grafico:hover {
+  filter: brightness(1.1);
+}
+
+.acoes-item .botao-grafico {
+  margin-top: 0;
+}
+
+/* Janela do gráfico (<dialog>): abre no centro, por cima de tudo */
+.janela-grafico {
+  margin: auto;                  /* centraliza (o reset do início do CSS zera as margens) */
+  width: min(44rem, calc(100% - 2rem));
+  padding: calc(var(--espaco) * 1.25);
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 2px solid var(--linha);
+  border-radius: 0.75rem;
+}
+
+/* ::backdrop = o fundo atrás da janela, escurecido */
+.janela-grafico::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.grafico-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--espaco);
+}
+
+.grafico-topo h2 {
+  margin-bottom: 0.25rem;
+}
+
+.grafico-variacao {
+  font-weight: 700;
+}
+
+.botao-fechar {
+  font: inherit;
+  font-size: 1.1rem;
+  color: var(--tinta-suave);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.botao-fechar:hover {
+  color: var(--laranja);
+}
+
+/* Botões de período: o escolhido fica laranja preenchido */
+.grafico-periodos {
+  display: flex;
+  gap: 0.5rem;
+  margin: var(--espaco) 0;
+}
+
+.botao-periodo {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--tinta-suave);
+  background: transparent;
+  border: 2px solid var(--linha);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+}
+
+.botao-periodo[aria-pressed="true"] {
+  color: var(--fundo);
+  background: var(--laranja);
+  border-color: var(--laranja);
+}
+
+/* Altura fixa: o Chart.js ocupa esse espaço (maintainAspectRatio: false) */
+.grafico-area {
+  position: relative;
+  height: 18rem;
+}
+
+.grafico-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--tinta-suave);
+  font-weight: 700;
+}
+
+.grafico-status:empty {
+  display: none;
+}
+
 /* =========================================================
    6c. PÁGINA CARTEIRA: formulário de cadastro
    ========================================================= */

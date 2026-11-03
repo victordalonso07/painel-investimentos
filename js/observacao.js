@@ -55,6 +55,8 @@ function criarItemObservacao(registro) {
     `;
     item.querySelector("h3").textContent = registro.ativo;
     item.querySelector(".tipo").textContent = registro.tipo_ativo;
+    // Botão "Ver gráfico" (js/grafico.js), antes da caixa "Mostrar no Início"
+    item.querySelector(".acoes-item").prepend(criarBotaoGrafico({ ativo: registro.ativo, tipo: registro.tipo_ativo }));
 
     // Caixa "Mostrar no Início": cada clique grava a escolha no banco (PATCH)
     const caixa = item.querySelector(".caixa-inicio");
