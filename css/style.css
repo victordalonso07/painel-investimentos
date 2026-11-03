@@ -850,6 +850,46 @@ body {
   content: "✕ ";
 }
 
+/* Botão secundário (ex.: "Cancelar edição"): contorno, sem preenchimento */
+.botao-secundario {
+  font: inherit;
+  font-weight: 700;
+  color: var(--tinta);
+  background: transparent;
+  border: 2px solid var(--linha);
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  cursor: pointer;
+}
+
+.botao-secundario:hover {
+  border-color: var(--tinta-suave);
+}
+
+/* Botão "Editar" no histórico, ao lado do Excluir */
+.botao-editar {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--laranja);
+  background: transparent;
+  border: 2px solid var(--laranja);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  margin: 0.75rem 0.5rem 0 0;
+  cursor: pointer;
+}
+
+.botao-editar:hover {
+  background: var(--laranja-fundo);
+}
+
+/* Cartão do histórico que está sendo editado: destacado em laranja */
+.posicao.em-edicao {
+  background: var(--laranja-fundo);
+  border-left-color: var(--laranja);
+}
+
 /* Botão desligado enquanto salva: evita gravar a mesma compra duas vezes */
 .botao-primario:disabled {
   opacity: 0.6;

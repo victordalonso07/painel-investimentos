@@ -2,6 +2,7 @@
 // CARTEIRA: compras e vendas salvas no banco (Supabase)
 // - Ao abrir a página: GET /api/operacoes → desenha posições (rendimento.js) e histórico
 // - Ao enviar o formulário: POST /api/operacoes → grava e redesenha
+// - Botão Editar: PATCH /api/operacoes?id=... → corrige e redesenha
 // - Botão Excluir: DELETE /api/operacoes?id=... → apaga e redesenha
 // O navegador nunca fala direto com o banco: sempre pela nossa API.
 // =========================================================
@@ -54,6 +55,7 @@ function criarItem(operacao) {
                 <div><dt>Total</dt><dd class="campo-total"></dd></div>
                 <div><dt>Data</dt><dd class="campo-data"></dd></div>
             </dl>
+            <button type="button" class="botao-editar">Editar</button>
             <button type="button" class="botao-excluir">Excluir</button>
         </article>
     `;
@@ -72,6 +74,12 @@ function criarItem(operacao) {
     const botaoExcluir = item.querySelector(".botao-excluir");
     botaoExcluir.setAttribute("aria-label", `Excluir ${nomeOperacao.toLowerCase()} de ${operacao.ativo}`);
     botaoExcluir.addEventListener("click", () => excluirOperacao(operacao, botaoExcluir));
+
+    // Botão Editar: leva os dados desta operação para o formulário
+    const botaoEditar = item.querySelector(".botao-editar");
+    botaoEditar.setAttribute("aria-label", `Editar ${nomeOperacao.toLowerCase()} de ${operacao.ativo}`);
+    botaoEditar.addEventListener("click", () => iniciarEdicao(operacao, item));
+    if (String(operacao.id) === String(editandoId)) item.querySelector("article").classList.add("em-edicao");
 
     return item;
 }
@@ -126,9 +134,13 @@ async function excluirOperacao(operacao, botao) {
             method: "DELETE",
         });
         if (!resposta.ok) {
-            const dados = await resposta.json();
-            throw new Error(dados.erro ?? `Código ${resposta.status}`);
+            const dados = await resposta.json().catch(() => ({}));
+            // Ex.: "Não dá: a quantidade de PETR4 ficaria negativa..." (venda feita depois desta compra)
+            mostrarMensagem(dados.erro ?? "Não foi possível excluir. Tente de novo.", true);
+            botao.disabled = false;
+            return;
         }
+        if (String(operacao.id) === String(editandoId)) cancelarEdicao();
         mostrarMensagem(`${nomeOperacaoDe(operacao)} de ${operacao.ativo} excluída.`, false);
         await carregarOperacoes();
     } catch (erro) {
@@ -137,6 +149,55 @@ async function excluirOperacao(operacao, botao) {
         botao.disabled = false;
     }
 }
+
+
+// ---------------------------------------------------------
+// EDITAR: o mesmo formulário serve para cadastrar e para corrigir
+// editandoId = null → cadastrando; um número → editando essa operação
+// ---------------------------------------------------------
+let editandoId = null;
+const tituloCadastro = document.getElementById("titulo-cadastro");
+const botaoCancelarEdicao = document.getElementById("botao-cancelar-edicao");
+
+function iniciarEdicao(operacao, item) {
+    editandoId = operacao.id;
+
+    // Preenche cada campo com o que está salvo
+    document.getElementById("operacao").value = operacao.tipo_operacao;
+    escolherAtivo(formCompra, operacao.tipo_ativo, operacao.ativo);   // js/comum.js
+    document.getElementById("quantidade").value = Number(operacao.quantidade);
+    document.getElementById("preco").value = Number(operacao.preco_unitario);
+    document.getElementById("taxas").value = Number(operacao.taxas ?? 0) || "";
+    document.getElementById("data").value = operacao.data_operacao;
+
+    // Muda a "cara" do formulário para o modo edição
+    tituloCadastro.textContent = `Editar ${nomeOperacaoDe(operacao).toLowerCase()} de ${operacao.ativo}`;
+    botaoAdicionar.textContent = "Salvar alteração";
+    botaoCancelarEdicao.hidden = false;
+    mostrarMensagem("", false);
+
+    // Destaca o cartão que está sendo editado
+    for (const cartao of listaOperacoes.querySelectorAll(".em-edicao")) cartao.classList.remove("em-edicao");
+    item.querySelector("article").classList.add("em-edicao");
+
+    // No celular o formulário fica lá embaixo: rola até ele
+    formCompra.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.getElementById("quantidade").focus({ preventScroll: true });
+}
+
+function cancelarEdicao() {
+    editandoId = null;
+    tituloCadastro.textContent = "Cadastrar operação";
+    botaoAdicionar.textContent = "Adicionar";
+    botaoCancelarEdicao.hidden = true;
+    formCompra.reset();
+    for (const cartao of listaOperacoes.querySelectorAll(".em-edicao")) cartao.classList.remove("em-edicao");
+}
+
+botaoCancelarEdicao.addEventListener("click", () => {
+    cancelarEdicao();
+    mostrarMensagem("", false);
+});
 
 
 // ---------------------------------------------------------
@@ -157,9 +218,11 @@ formCompra.addEventListener("submit", async (evento) => {
         data_operacao: document.getElementById("data").value,
     };
 
-    // Venda: confere antes se você tem essa quantidade (o servidor confere de novo)
+    // Venda: confere antes se você tem essa quantidade (o servidor confere de novo).
+    // Na edição, a própria operação que está sendo editada não entra na conta
     if (novaOperacao.tipo_operacao === "venda") {
-        const posicao = calcularPosicoes(ultimasOperacoes).find((p) => p.ativo === novaOperacao.ativo);
+        const outras = ultimasOperacoes.filter((op) => String(op.id) !== String(editandoId));
+        const posicao = calcularPosicoes(outras).find((p) => p.ativo === novaOperacao.ativo);
         if (!posicao) {
             mostrarMensagem(`Você não tem ${novaOperacao.ativo} na carteira para vender.`, true);
             return;
@@ -176,8 +239,10 @@ formCompra.addEventListener("submit", async (evento) => {
     mostrarMensagem("", false);
 
     try {
-        const resposta = await fetch("/api/operacoes", {
-            method: "POST",
+        // Cadastro novo = POST em /api/operacoes; edição = PATCH em /api/operacoes?id=12
+        const editando = editandoId !== null;
+        const resposta = await fetch(editando ? `/api/operacoes?id=${encodeURIComponent(editandoId)}` : "/api/operacoes", {
+            method: editando ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },  // avisa: o corpo é JSON
             body: JSON.stringify(novaOperacao),               // objeto → texto
         });
@@ -191,10 +256,11 @@ formCompra.addEventListener("submit", async (evento) => {
             return;
         }
 
-        // Deu certo (201): limpa o formulário e redesenha a lista com o que está no banco
+        // Deu certo: limpa o formulário e redesenha a lista com o que está no banco
+        if (editando) cancelarEdicao();
         formCompra.reset();
         focarAtivo(formCompra);
-        mostrarMensagem(`${nomeOperacaoDe(dados)} de ${dados.ativo} cadastrada.`, false);
+        mostrarMensagem(`${nomeOperacaoDe(dados)} de ${dados.ativo} ${editando ? "alterada" : "cadastrada"}.`, false);
         await carregarOperacoes();
     } catch (erro) {
         mostrarMensagem("Falha de conexão. Verifique a internet e tente de novo.", true);

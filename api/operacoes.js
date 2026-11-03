@@ -3,6 +3,7 @@
 // Roda no servidor da Vercel, NÃO no navegador.
 //   GET  /api/operacoes  → lista todas as operações
 //   POST /api/operacoes  → grava uma operação nova (dados em JSON)
+//   PATCH  /api/operacoes?id=12 → corrige a operação de id 12 (dados em JSON)
 //   DELETE /api/operacoes?id=12 → apaga a operação de id 12
 // Conversa com o banco Supabase usando a chave secreta, guardada no cofre da Vercel.
 // =========================================================
@@ -66,6 +67,48 @@ function validarOperacao(corpo) {
     };
 }
 
+// Confere se, depois da mudança, nenhum ativo fica com quantidade negativa
+// (ex.: apagar ou diminuir uma compra que já teve venda depois).
+// removerId = operação que sai (PATCH e DELETE); incluir = operação que entra (POST e PATCH).
+// Devolve uma mensagem de erro, ou null se estiver tudo certo
+async function conferirSaldos(tabela, chave, { removerId = null, incluir = null }) {
+    const headers = cabecalhosSupabase(chave);
+    const ativos = new Set();
+    if (incluir) ativos.add(incluir.ativo);
+
+    // Qual ativo era o da operação que vai sair? (numa edição, o ativo pode ter mudado)
+    if (removerId) {
+        const consulta = await fetch(`${tabela}?select=ativo&id=eq.${removerId}`, { headers });
+        if (!consulta.ok) throw new Error(`Supabase respondeu ${consulta.status}`);
+        const [antiga] = await consulta.json();
+        if (antiga) ativos.add(antiga.ativo);
+    }
+
+    for (const ativo of ativos) {
+        const consulta = await fetch(
+            `${tabela}?select=id,tipo_operacao,quantidade&ativo=eq.${encodeURIComponent(ativo)}`,
+            { headers }
+        );
+        if (!consulta.ok) throw new Error(`Supabase respondeu ${consulta.status}`);
+        // Simula a mudança: tira a operação removida e põe a nova
+        const operacoes = (await consulta.json()).filter((op) => String(op.id) !== String(removerId));
+        if (incluir && incluir.ativo === ativo) operacoes.push(incluir);
+
+        const saldo = operacoes.reduce((soma, op) =>
+            soma + (op.tipo_operacao === "compra" ? 1 : -1) * Number(op.quantidade), 0);
+        if (saldo < -1e-9) {
+            return `Não dá: a quantidade de ${ativo} ficaria negativa (as vendas passariam das compras).`;
+        }
+    }
+    return null;
+}
+
+// PATCH e DELETE precisam de um id numérico no endereço (?id=12)
+function lerId(request) {
+    const id = new URL(request.url).searchParams.get("id");
+    return id && /^\d{1,15}$/.test(id) ? id : null;
+}
+
 export default {
     async fetch(request) {
         // Pega o endereço do projeto e a chave secreta no cofre da Vercel
@@ -96,8 +139,13 @@ export default {
                 return Response.json(operacoes, { headers: { "Cache-Control": "no-store" } });
             }
 
-            // ---------- GRAVAR (POST) ----------
-            if (request.method === "POST") {
+            // ---------- GRAVAR (POST) ou EDITAR (PATCH) ----------
+            // Os dois recebem a operação inteira e passam pela MESMA validação
+            if (request.method === "POST" || request.method === "PATCH") {
+                const editando = request.method === "PATCH";
+                const id = editando ? lerId(request) : null;
+                if (editando && !id) return responderErro("Informe um id válido. Exemplo: ?id=12", 400);
+
                 // Exige JSON: isso também impede que outro site envie um formulário "escondido" para cá
                 if (!request.headers.get("content-type")?.includes("application/json")) {
                     return responderErro("Envie os dados em JSON.", 415);
@@ -113,28 +161,14 @@ export default {
                 const { erro, operacao } = validarOperacao(corpo);
                 if (erro) return responderErro(erro, 400);
 
-                // Venda: confere no banco se há quantidade suficiente desse ativo.
-                // O navegador também confere, mas o servidor nunca confia só no navegador
-                if (operacao.tipo_operacao === "venda") {
-                    const consulta = await fetch(
-                        `${tabela}?select=tipo_operacao,quantidade&ativo=eq.${encodeURIComponent(operacao.ativo)}`,
-                        { headers: cabecalhosSupabase(chave) }
-                    );
-                    if (!consulta.ok) {
-                        console.error("Supabase recusou a consulta da venda:", consulta.status, await consulta.text());
-                        return responderErro("Não foi possível conferir a venda.", 502);
-                    }
-                    const anteriores = await consulta.json();
-                    const saldo = anteriores.reduce((soma, op) =>
-                        soma + (op.tipo_operacao === "compra" ? 1 : -1) * Number(op.quantidade), 0);
-                    if (operacao.quantidade > saldo + 1e-9) {
-                        return responderErro(`Quantidade maior do que você tem de ${operacao.ativo}.`, 400);
-                    }
-                }
+                // Saldo: o navegador também confere, mas o servidor nunca confia só no navegador
+                const erroSaldo = await conferirSaldos(tabela, chave, { removerId: id, incluir: operacao });
+                if (erroSaldo) return responderErro(erroSaldo, 400);
 
-                const resposta = await fetch(tabela, {
-                    method: "POST",
-                    // return=representation: o banco devolve a linha criada (com id e criado_em)
+                // POST cria uma linha nova; PATCH altera a linha de id=eq.12
+                const resposta = await fetch(editando ? `${tabela}?id=eq.${id}` : tabela, {
+                    method: request.method,
+                    // return=representation: o banco devolve a linha como ficou (com id e criado_em)
                     headers: { ...cabecalhosSupabase(chave), Prefer: "return=representation" },
                     body: JSON.stringify(operacao),
                 });
@@ -142,17 +176,20 @@ export default {
                     console.error("Supabase recusou a gravação:", resposta.status, await resposta.text());
                     return responderErro("Não foi possível salvar a operação.", 502);
                 }
-                const [criada] = await resposta.json();
-                return Response.json(criada, { status: 201, headers: { "Cache-Control": "no-store" } });
+                const [salva] = await resposta.json();
+                if (!salva) return responderErro("Operação não encontrada.", 404);
+                return Response.json(salva, { status: editando ? 200 : 201, headers: { "Cache-Control": "no-store" } });
             }
 
             // ---------- APAGAR (DELETE) ----------
             if (request.method === "DELETE") {
                 // O id vem no endereço (?id=12) e precisa ser só números
-                const id = new URL(request.url).searchParams.get("id");
-                if (!id || !/^\d{1,15}$/.test(id)) {
-                    return responderErro("Informe um id válido. Exemplo: ?id=12", 400);
-                }
+                const id = lerId(request);
+                if (!id) return responderErro("Informe um id válido. Exemplo: ?id=12", 400);
+
+                // Apagar uma compra que já teve venda depois deixaria o saldo negativo
+                const erroSaldo = await conferirSaldos(tabela, chave, { removerId: id });
+                if (erroSaldo) return responderErro(erroSaldo, 400);
 
                 // "id=eq.12" é como o Supabase entende "onde id é igual a 12".
                 // Sem esse filtro, o DELETE apagaria a tabela inteira: por isso o id é obrigatório
@@ -173,8 +210,8 @@ export default {
                 return Response.json(apagadas[0], { headers: { "Cache-Control": "no-store" } });
             }
 
-            // Qualquer outro método (PUT, PATCH...) ainda não existe
-            return new Response(null, { status: 405, headers: { Allow: "GET, POST, DELETE" } });
+            // Qualquer outro método (PUT...) não existe
+            return new Response(null, { status: 405, headers: { Allow: "GET, POST, PATCH, DELETE" } });
         } catch (erro) {
             console.error("Falha ao falar com o Supabase:", erro);
             return responderErro("Falha ao acessar o banco de dados.", 502);

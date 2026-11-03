@@ -291,6 +291,19 @@ function configurarSeletorAtivo(formulario) {
     preencherLista();
 }
 
+// Preenche Tipo e Ativo do formulário com um ativo já existente (usado ao EDITAR uma operação).
+// Se o ativo não estiver na lista dos 10 principais, escolhe "Outro (digitar)" e escreve no campo de texto
+function escolherAtivo(formulario, tipoAtivo, ativo) {
+    const tipo = formulario.querySelector("#tipo");
+    const lista = formulario.querySelector("#ativo-lista");
+    tipo.value = tipoAtivo;
+    tipo.dispatchEvent(new Event("change"));   // finge a troca de tipo: a lista de ativos é recriada
+    const temNaLista = [...lista.options].some((opcao) => opcao.value === ativo);
+    lista.value = temNaLista ? ativo : OPCAO_OUTRO;
+    formulario.querySelector("#ativo").value = temNaLista ? "" : ativo;
+    lista.dispatchEvent(new Event("change"));  // mostra ou esconde o campo de texto
+}
+
 // Lê o ativo escolhido: da lista, ou do campo de texto se for "Outro"
 function lerAtivo(formulario) {
     const lista = formulario.querySelector("#ativo-lista");
