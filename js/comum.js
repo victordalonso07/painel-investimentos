@@ -224,7 +224,11 @@ function buscarPrecosTesouro() {
     promessaTesouro ??= buscarJSON("/api/tesouro").then((dados) => {
         const precos = new Map();
         for (const titulo of dados.titulos) {
-            precos.set(nomeTesouro(titulo.nome), { preco: titulo.preco, variacao: titulo.variacao });
+            precos.set(nomeTesouro(titulo.nome), {
+                preco: titulo.preco,               // preço de VENDA (resgate): vale para calcular o valor atual
+                precoCompra: titulo.precoCompra,   // preço de COMPRA: o que você paga para comprar hoje
+                variacao: titulo.variacao,
+            });
         }
         return precos;
     });
@@ -315,4 +319,53 @@ function lerAtivo(formulario) {
 function focarAtivo(formulario) {
     const lista = formulario.querySelector("#ativo-lista");
     (lista.value === OPCAO_OUTRO ? formulario.querySelector("#ativo") : lista).focus();
+}
+
+
+// ---------------------------------------------------------
+// Preço de um ativo numa data (usado no cadastro: você informa o VALOR, o site calcula a quantidade)
+// Devolve o preço por unidade, ou null se não encontrar (aí o formulário pede o preço à mão)
+// ---------------------------------------------------------
+
+// Data de hoje no formato "2026-11-03", no fuso do Brasil (e não no de Londres, como o toISOString)
+function dataDeHoje() {
+    return new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+}
+
+async function buscarPrecoNaData(ativo, tipo, data, tipoOperacao) {
+    const hoje = data === dataDeHoje();
+
+    // Ação, FII, ETF, BDR
+    if (TIPOS_B3.includes(tipo)) {
+        if (hoje) return (await buscarCotacaoB3(ativo)).preco;
+        // Dia anterior: procura no histórico (máximo de 3 meses no plano grátis da brapi)
+        const historico = await buscarJSON(`/api/historico?ativo=${encodeURIComponent(ativo)}&periodo=3mo`);
+        // Pega o último pregão até a data escolhida (fim de semana e feriado não têm preço)
+        const dias = historico.pontos.filter((ponto) => new Date(ponto.data).toISOString().slice(0, 10) <= data);
+        if (dias.length === 0) return null;   // data mais antiga que 3 meses
+        return dias[dias.length - 1].preco;
+    }
+
+    // Cripto (CoinGecko)
+    if (tipo === "Cripto") {
+        const id = IDS_COINGECKO[ativo];
+        if (!id) return null;
+        if (hoje) return (await buscarCotacoesCripto([ativo]))[ativo]?.preco ?? null;
+        const [ano, mes, dia] = data.split("-");   // a CoinGecko pede a data como "03-11-2026"
+        const dados = await buscarJSON(
+            `https://api.coingecko.com/api/v3/coins/${id}/history?date=${dia}-${mes}-${ano}&localization=false`
+        );
+        return dados.market_data?.current_price?.brl ?? null;
+    }
+
+    // Tesouro Direto: só temos o preço do último dia disponível
+    if (tipo === "Tesouro Direto") {
+        if (!hoje) return null;
+        const titulo = (await buscarPrecosTesouro()).get(nomeTesouro(ativo));
+        if (!titulo) return null;
+        // Quem compra paga o preço de compra; quem vende (resgata) recebe o de venda
+        return tipoOperacao === "compra" ? (titulo.precoCompra ?? titulo.preco) : titulo.preco;
+    }
+
+    return null;   // "Outro" (CDB, LCI...): não há preço de mercado
 }

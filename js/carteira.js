@@ -152,6 +152,110 @@ async function excluirOperacao(operacao, botao) {
 
 
 // ---------------------------------------------------------
+// VALOR → QUANTIDADE: você informa quanto investiu; o site busca o preço e calcula
+// ---------------------------------------------------------
+const campoValor = document.getElementById("valor");
+const caixaPrecoManual = document.getElementById("preco-manual");
+const campoPrecoManual = document.getElementById("campo-preco");
+const entradaPreco = document.getElementById("preco");
+const previa = document.getElementById("previa-compra");
+
+// Data começa em hoje (o caso mais comum: "comprei hoje")
+function preencherDataDeHoje() {
+    document.getElementById("data").value = dataDeHoje();   // js/comum.js
+}
+
+// Mostra ou esconde o campo de preço manual
+function atualizarCampoPreco() {
+    campoPrecoManual.hidden = !caixaPrecoManual.checked;
+    entradaPreco.required = caixaPrecoManual.checked;
+}
+
+// Descobre o preço por unidade e a quantidade. Devolve { preco, quantidade } ou { erro }
+async function calcularQuantidade(operacao, liberarManual = false) {
+    const valor = Number(campoValor.value);
+    if (!(valor > 0)) return { erro: "Informe o valor investido." };
+    if (!operacao.ativo) return { erro: "Escolha o ativo." };
+
+    let preco;
+    if (caixaPrecoManual.checked) {
+        preco = Number(entradaPreco.value);
+    } else if (operacao.tipo_ativo === "Outro") {
+        // CDB, LCI...: não há "preço por unidade"; registramos 1 unidade com o valor todo
+        return { preco: valor, quantidade: 1 };
+    } else {
+        try {
+            preco = await buscarPrecoNaData(operacao.ativo, operacao.tipo_ativo, operacao.data_operacao, operacao.tipo_operacao);
+        } catch (erro) {
+            console.error("Falha ao buscar o preço:", erro);
+            preco = null;
+        }
+        if (!preco) {
+            // Não achou (ex.: data muito antiga). Ao salvar, já libera o preço manual para você digitar
+            if (liberarManual) {
+                caixaPrecoManual.checked = true;
+                atualizarCampoPreco();
+                entradaPreco.focus();
+            }
+            return { erro: `Não encontrei o preço de ${operacao.ativo} em ${formatarData(operacao.data_operacao)}. Informe o preço por unidade.` };
+        }
+    }
+    if (!(preco > 0)) return { erro: "Informe o preço por unidade." };
+
+    // 8 casas decimais: suficiente até para frações de Bitcoin
+    return { preco: preco, quantidade: Number((valor / preco).toFixed(8)) };
+}
+
+// Prévia enquanto você preenche: "Preço de PETR4 em 03/11/2026: R$ 37,10 → 13,48 unidades"
+let previaAtual = 0;
+let esperaPrevia = null;
+function atualizarPrevia() {
+    clearTimeout(esperaPrevia);
+    // Espera 0,5 s depois da última tecla para não buscar o preço a cada número digitado
+    esperaPrevia = setTimeout(async () => {
+        const minhaPrevia = ++previaAtual;
+        const operacao = {
+            tipo_operacao: document.getElementById("operacao").value,
+            ativo: lerAtivo(formCompra),
+            tipo_ativo: document.getElementById("tipo").value,
+            data_operacao: document.getElementById("data").value,
+        };
+        if (!(Number(campoValor.value) > 0) || !operacao.ativo || !operacao.data_operacao) {
+            previa.textContent = "";
+            return;
+        }
+        mostrarCarregando(previa, "Buscando o preço");
+        previa.classList.remove("erro");
+        const calculo = await calcularQuantidade(operacao);
+        if (minhaPrevia !== previaAtual) return;   // você mudou algo enquanto buscava: vale a prévia mais nova
+        if (calculo.erro) {
+            previa.textContent = calculo.erro;
+            previa.classList.add("erro");
+            return;
+        }
+        const origem = caixaPrecoManual.checked ? "Preço informado" : `Preço de ${operacao.ativo} em ${formatarData(operacao.data_operacao)}`;
+        previa.textContent = `${origem}: ${formatarReais(calculo.preco)} → ${formatarQuantidade(calculo.quantidade)} unidade(s)`;
+    }, 500);
+}
+
+caixaPrecoManual.addEventListener("change", () => {
+    atualizarCampoPreco();
+    atualizarPrevia();
+});
+// Qualquer mudança no formulário atualiza a prévia
+for (const id of ["operacao", "tipo", "ativo-lista", "ativo", "data", "valor", "preco"]) {
+    document.getElementById(id).addEventListener("input", atualizarPrevia);
+}
+// Depois do formulário.reset(): volta a data para hoje, esconde o preço manual e limpa a prévia
+formCompra.addEventListener("reset", () => setTimeout(() => {
+    preencherDataDeHoje();
+    atualizarCampoPreco();
+    previa.textContent = "";
+}));
+preencherDataDeHoje();
+
+
+// ---------------------------------------------------------
 // EDITAR: o mesmo formulário serve para cadastrar e para corrigir
 // editandoId = null → cadastrando; um número → editando essa operação
 // ---------------------------------------------------------
@@ -165,7 +269,9 @@ function iniciarEdicao(operacao, item) {
     // Preenche cada campo com o que está salvo
     document.getElementById("operacao").value = operacao.tipo_operacao;
     escolherAtivo(formCompra, operacao.tipo_ativo, operacao.ativo);   // js/comum.js
-    document.getElementById("quantidade").value = Number(operacao.quantidade);
+    // Na edição, o preço é o que foi salvo (não busca de novo): marca "preço manual" com ele
+    document.getElementById("valor").value = +(Number(operacao.quantidade) * Number(operacao.preco_unitario)).toFixed(2);
+    document.getElementById("preco-manual").checked = true;
     document.getElementById("preco").value = Number(operacao.preco_unitario);
     document.getElementById("taxas").value = Number(operacao.taxas ?? 0) || "";
     document.getElementById("data").value = operacao.data_operacao;
@@ -182,7 +288,9 @@ function iniciarEdicao(operacao, item) {
 
     // No celular o formulário fica lá embaixo: rola até ele
     formCompra.scrollIntoView({ behavior: "smooth", block: "center" });
-    document.getElementById("quantidade").focus({ preventScroll: true });
+    atualizarCampoPreco();
+    atualizarPrevia();
+    document.getElementById("valor").focus({ preventScroll: true });
 }
 
 function cancelarEdicao() {
@@ -212,11 +320,21 @@ formCompra.addEventListener("submit", async (evento) => {
         tipo_operacao: document.getElementById("operacao").value,
         ativo: lerAtivo(formCompra),
         tipo_ativo: document.getElementById("tipo").value,
-        quantidade: Number(document.getElementById("quantidade").value),
-        preco_unitario: Number(document.getElementById("preco").value),
         taxas: Number(document.getElementById("taxas").value || 0),   // vazio = 0
         data_operacao: document.getElementById("data").value,
     };
+
+    // Valor → preço → quantidade (ex.: R$ 500 ÷ R$ 37,10 = 13,477 ações)
+    botaoAdicionar.disabled = true;
+    mostrarMensagem("", false);
+    const calculo = await calcularQuantidade(novaOperacao, true);
+    botaoAdicionar.disabled = false;
+    if (calculo.erro) {
+        mostrarMensagem(calculo.erro, true);
+        return;
+    }
+    novaOperacao.preco_unitario = calculo.preco;
+    novaOperacao.quantidade = calculo.quantidade;
 
     // Venda: confere antes se você tem essa quantidade (o servidor confere de novo).
     // Na edição, a própria operação que está sendo editada não entra na conta
@@ -227,8 +345,17 @@ formCompra.addEventListener("submit", async (evento) => {
             mostrarMensagem(`Você não tem ${novaOperacao.ativo} na carteira para vender.`, true);
             return;
         }
+        // Diferença pequena (até 1%) é arredondamento do valor digitado: vende tudo
+        if (novaOperacao.quantidade > posicao.quantidade && novaOperacao.quantidade <= posicao.quantidade * 1.01) {
+            novaOperacao.quantidade = posicao.quantidade;
+        }
         if (novaOperacao.quantidade > posicao.quantidade + 1e-9) {
-            mostrarMensagem(`Você tem só ${formatarQuantidade(posicao.quantidade)} de ${novaOperacao.ativo}.`, true);
+            const valorMaximo = posicao.quantidade * novaOperacao.preco_unitario;
+            mostrarMensagem(
+                `Você tem só ${formatarQuantidade(posicao.quantidade)} de ${novaOperacao.ativo} ` +
+                `(cerca de ${formatarReais(valorMaximo)} a esse preço).`,
+                true
+            );
             return;
         }
         novaOperacao.tipo_ativo = posicao.tipo;   // a venda usa o mesmo tipo da compra

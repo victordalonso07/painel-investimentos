@@ -850,6 +850,26 @@ body {
   content: "✕ ";
 }
 
+/* Prévia do cálculo no cadastro: preço do dia e quantidade que vai ser registrada */
+.previa-compra {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--laranja);
+  background: var(--laranja-fundo);
+  border-left: 3px solid var(--laranja);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+}
+
+.previa-compra:empty {
+  display: none;
+}
+
+.previa-compra.erro {
+  color: var(--baixa);
+  border-left-color: var(--baixa);
+}
+
 /* Botão secundário (ex.: "Cancelar edição"): contorno, sem preenchimento */
 .botao-secundario {
   font: inherit;
