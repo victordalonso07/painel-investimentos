@@ -1,7 +1,7 @@
 // =========================================================
 // API: EXPLICAÇÃO DA IA (por que um ativo se mexeu hoje)
-// Uso: /api/explicacao?ativo=PETR4&variacao=3.2
-// Parte 1: buscar as notícias do dia
+// Uso: /api/explicacao?ativo=PETR4&direcao=alta
+// 1. busca as notícias do dia  2. manda para o Gemini  3. devolve a explicação (cache de 6 h)
 // =========================================================
 
 function responderErro(mensagem, status) {
@@ -24,11 +24,11 @@ Termine com a fonte principal entre parênteses, ex.: (Fonte: InfoMoney).
 `;
 
 // Monta a pergunta do dia: ativo, variação e a lista de manchetes
-function montarPergunta(ativo, variacao, noticias) {
+function montarPergunta(ativo, direcao, noticias) {
     const lista = noticias.length > 0
         ? noticias.map((n) => `- ${n.titulo} [${n.fonte}]`).join("\n")
         : "(nenhuma notícia encontrada)";
-    return `Ativo: ${ativo}\nVariação hoje: ${variacao}%\n\nNotícias de hoje:\n${lista}`;
+    return `Ativo: ${ativo}\nMovimento hoje: ${direcao}\n\nNotícias de hoje:\n${lista}`;
 }
 
 // O RSS troca alguns símbolos por códigos (ex.: "&amp;" no lugar de "&"). Aqui desfazemos isso
@@ -111,19 +111,35 @@ export default {
     async fetch(request) {
         const url = new URL(request.url);
         const ativo = url.searchParams.get("ativo");
+        const direcao = url.searchParams.get("direcao");   // "alta" ou "queda"
 
-        // Mesma validação da /api/cotacao: 2 a 10 letras/números
+        // Valida o ativo (2 a 10 letras/números) e a direção (só esses dois valores)
         if (!ativo || !/^[A-Za-z0-9]{2,10}$/.test(ativo)) {
-            return responderErro("Informe um ativo válido. Exemplo: ?ativo=PETR4", 400);
-    }
+            return responderErro("Informe um ativo válido. Exemplo: ?ativo=PETR4&direcao=alta", 400);
+        }
+        if (direcao !== "alta" && direcao !== "queda") {
+            return responderErro("Informe a direção: alta ou queda.", 400);
+        }
 
-    try {
-        const noticias = await buscarNoticias(ativo.toUpperCase());
-        // Por enquanto só devolve as notícias, para testarmos esta parte
-        return Response.json({ativo: ativo.toUpperCase(), noticias: noticias });
+        try {
+            const ativoMaiusculo = ativo.toUpperCase();
+            const noticias = await buscarNoticias(ativoMaiusculo);                       // parte 1
+            const pergunta = montarPergunta(ativoMaiusculo, direcao, noticias);          // parte 2a
+            const explicacao = await perguntarIA(pergunta);                              // parte 2b
+
+            return Response.json(
+                { ativo: ativoMaiusculo, explicacao: explicacao },
+                {
+                    headers: {
+                        // Guarda a explicação por 6 horas (21600 s): o mesmo texto serve o dia todo
+                        // e o limite grátis do Gemini não é gasto a cada F5
+                        "Cache-Control": "public, s-maxage=21600",
+                    },
+                }
+            );
         } catch (erro) {
-            console.error("Falha ao buscar notícias:", erro);
-            return responderErro("Não foi possível buscar notícias.", 502);
+            console.error("Falha ao gerar a explicação:", erro);
+            return responderErro("Explicação indisponível no momento.", 502);
         }
     },
 };
