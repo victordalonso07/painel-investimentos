@@ -45,7 +45,7 @@ function criarItemDestaque(posicao) {
             <p class="variacao"></p>
             <div class="explicacao">
                 <p class="explicacao-titulo">Por que se mexeu</p>
-                <p>Explicação da IA em breve.</p>
+                <p class="texto-explicacao">Buscando o motivo…</p>
             </div>
         </article>
     `;
@@ -54,7 +54,25 @@ function criarItemDestaque(posicao) {
     const variacao = item.querySelector(".variacao");
     variacao.textContent = `${formatarPercentual(posicao.variacao)} hoje`;
     pintarSinal(variacao, posicao.variacao);
+
+    // Pede a explicação para a NOSSA API (/api/explicacao), que busca as notícias e chama a IA.
+    // Sem "await": o destaque aparece na hora e o texto chega depois
+    preencherExplicacao(item.querySelector(".texto-explicacao"), posicao);
     return item;
+}
+
+// Busca o "por que se mexeu" e escreve no destaque
+async function preencherExplicacao(elemento, posicao) {
+    const direcao = posicao.variacao >= 0 ? "alta" : "queda";
+    try {
+        const dados = await buscarJSON(
+            `/api/explicacao?ativo=${encodeURIComponent(posicao.ativo)}&direcao=${direcao}`
+        );
+        elemento.textContent = dados.explicacao;   // textContent: o texto da IA nunca vira código
+    } catch (erro) {
+        elemento.textContent = "Explicação indisponível agora. Tente recarregar mais tarde.";
+        console.error(`Falha ao buscar a explicação de ${posicao.ativo}:`, erro);
+    }
 }
 
 // Escreve um valor com sinal e cor num cartão do resumo
