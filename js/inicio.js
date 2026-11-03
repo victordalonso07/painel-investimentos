@@ -65,23 +65,28 @@ function criarItemDestaque(posicao) {
     pintarSinal(variacao, posicao.variacao);
 
     // Pede a explicação para a NOSSA API (/api/explicacao), que busca as notícias e chama a IA.
-    // Sem "await": o destaque aparece na hora e o texto chega depois
-    preencherExplicacao(item.querySelector(".texto-explicacao"), posicao);
-    return item;
+    // Devolve o item E a "promessa" da explicação: quem chamou decide quando esperar por ela
+    const explicacaoPronta = preencherExplicacao(item.querySelector(".texto-explicacao"), posicao);
+    return { item, explicacaoPronta };
 }
 
 // Busca o "por que se mexeu" e escreve no destaque
 async function preencherExplicacao(elemento, posicao) {
     const direcao = posicao.variacao >= 0 ? "alta" : "queda";
-    try {
-        const dados = await buscarJSON(
-            `/api/explicacao?ativo=${encodeURIComponent(posicao.ativo)}&direcao=${direcao}`
-        );
-        elemento.textContent = dados.explicacao;   // textContent: o texto da IA nunca vira código
-    } catch (erro) {
-        elemento.textContent = "Explicação indisponível agora. Tente recarregar mais tarde.";
-        console.error(`Falha ao buscar a explicação de ${posicao.ativo}:`, erro);
+    const endereco = `/api/explicacao?ativo=${encodeURIComponent(posicao.ativo)}&direcao=${direcao}`;
+
+    // Até 2 tentativas: se a IA estiver ocupada na primeira, espera 2 s e tenta de novo
+    for (let tentativa = 1; tentativa <= 2; tentativa++) {
+        try {
+            const dados = await buscarJSON(endereco);
+            elemento.textContent = dados.explicacao;   // textContent: o texto da IA nunca vira código
+            return;
+        } catch (erro) {
+            console.error(`Falha ao buscar a explicação de ${posicao.ativo} (tentativa ${tentativa}):`, erro);
+            if (tentativa === 1) await new Promise((esperar) => setTimeout(esperar, 2000));
+        }
     }
+    elemento.textContent = "Explicação indisponível agora. Tente recarregar mais tarde.";
 }
 
 // Escreve um valor com sinal e cor num cartão do resumo
@@ -225,12 +230,19 @@ async function carregarDestaques() {
     const porMovimento = (a, b) => Math.abs(b.variacao) - Math.abs(a.variacao);
     const destaques = [...pessoais.sort(porMovimento), ...mercado.sort(porMovimento)].slice(0, 3);
 
-    for (const destaque of destaques) listaDestaques.appendChild(criarItemDestaque(destaque));
-    if (destaques.length > 0) {
-        avisoDestaquesVazio.hidden = true;
-    } else {
+    if (destaques.length === 0) {
         avisoDestaquesVazio.textContent = "Não foi possível buscar os destaques agora. Tente recarregar mais tarde.";
+        return;
     }
+
+    // Cria os 3 cartões "fora da tela" e espera TODAS as explicações da IA ficarem prontas.
+    // Promise.all = "espere todas essas promessas terminarem" (rodam ao mesmo tempo, não uma por vez)
+    const cartoes = destaques.map(criarItemDestaque);
+    await Promise.all(cartoes.map((cartao) => cartao.explicacaoPronta));
+
+    // Tudo pronto: tira a mensagem "Analisando…" e mostra os 3 de uma vez
+    for (const cartao of cartoes) listaDestaques.appendChild(cartao.item);
+    avisoDestaquesVazio.hidden = true;
 }
 
 // Ordem: carteira → observação → destaques (os destaques usam as variações das duas primeiras)

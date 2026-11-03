@@ -403,6 +403,26 @@ body {
   text-decoration: underline;
 }
 
+/* "Analisando os ativos em destaque hoje..." com os pontinhos aparecendo um de cada vez */
+.carregando {
+  font-weight: 700;
+}
+
+.pontinhos span {
+  animation: pontinho 1.4s infinite;
+  opacity: 0;
+}
+
+/* Cada ponto começa um pouco depois do anterior: 1º, depois 2º, depois 3º */
+.pontinhos span:nth-child(2) { animation-delay: 0.2s; }
+.pontinhos span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pontinho {
+  0%, 15%   { opacity: 0; }   /* escondido */
+  30%, 70%  { opacity: 1; }   /* aparece e fica */
+  100%      { opacity: 0; }   /* some para recomeçar */
+}
+
 /* =========================================================
    6b. PÁGINA CARTEIRA: lista completa
    ========================================================= */
@@ -757,6 +777,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+  }
+
+  /* Sem animação: os três pontos ficam parados e visíveis */
+  .pontinhos span {
+    animation: none;
+    opacity: 1;
   }
 
   .destaque:hover {

@@ -72,7 +72,10 @@
 
       <!-- Preenchida pelo js/inicio.js: os 3 ativos com maior variação do dia (seus primeiro, depois a bolsa) -->
       <ul class="lista-destaques" id="lista-destaques"></ul>
-      <p class="descricao" id="destaques-vazio">Buscando os destaques do dia…</p>
+      <!-- Aparece enquanto as cotações e a IA carregam; os 3 pontinhos piscam em sequência (CSS) -->
+      <p class="descricao carregando" id="destaques-vazio" role="status">
+        Analisando os ativos em destaque hoje<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
+      </p>
     </section>
 
     <!-- Carteira: cada ativo que eu tenho -->
