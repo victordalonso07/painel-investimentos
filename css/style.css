@@ -403,6 +403,32 @@ body {
   text-decoration: underline;
 }
 
+/* Explicação da IA cortada em 3 linhas, com "..." no fim (o JS tira a classe ao clicar em Ler mais) */
+.texto-explicacao.resumida {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* Botão "Ler mais": parece um link laranja */
+.botao-ler-mais {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--laranja);
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 0.4rem;
+  cursor: pointer;
+}
+
+.botao-ler-mais:hover {
+  text-decoration: underline;
+}
+
 /* "Analisando os ativos em destaque hoje..." com os pontinhos aparecendo um de cada vez */
 .carregando {
   font-weight: 700;

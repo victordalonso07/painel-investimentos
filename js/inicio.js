@@ -53,7 +53,8 @@ function criarItemDestaque(posicao) {
             <p class="variacao"></p>
             <div class="explicacao">
                 <p class="explicacao-titulo">Por que se mexeu</p>
-                <p class="texto-explicacao">Buscando o motivo…</p>
+                <p class="texto-explicacao resumida">Buscando o motivo…</p>
+                <button type="button" class="botao-ler-mais" aria-expanded="false" hidden>Ler mais</button>
             </div>
         </article>
     `;
@@ -68,6 +69,25 @@ function criarItemDestaque(posicao) {
     // Devolve o item E a "promessa" da explicação: quem chamou decide quando esperar por ela
     const explicacaoPronta = preencherExplicacao(item.querySelector(".texto-explicacao"), posicao);
     return { item, explicacaoPronta };
+}
+
+// "Ler mais": o texto começa cortado em 3 linhas (classe "resumida" no CSS).
+// O botão só aparece se o texto for maior que isso; cada clique abre ou fecha
+function ativarLerMais(item) {
+    const texto = item.querySelector(".texto-explicacao");
+    const botao = item.querySelector(".botao-ler-mais");
+
+    // scrollHeight = altura do texto INTEIRO; clientHeight = altura que está aparecendo.
+    // Se o inteiro é maior, parte do texto está escondida → precisa do botão
+    if (texto.scrollHeight <= texto.clientHeight + 1) return;
+    botao.hidden = false;
+
+    botao.addEventListener("click", () => {
+        // toggle: tira a classe se tem, põe se não tem. Devolve true se ela FICOU no elemento
+        const resumido = texto.classList.toggle("resumida");
+        botao.textContent = resumido ? "Ler mais" : "Ler menos";
+        botao.setAttribute("aria-expanded", String(!resumido));   // avisa leitores de tela
+    });
 }
 
 // Busca o "por que se mexeu" e escreve no destaque
@@ -243,6 +263,9 @@ async function carregarDestaques() {
     // Tudo pronto: tira a mensagem "Analisando…" e mostra os 3 de uma vez
     for (const cartao of cartoes) listaDestaques.appendChild(cartao.item);
     avisoDestaquesVazio.hidden = true;
+
+    // Só agora os cartões estão na tela e dá para medir o tamanho dos textos
+    for (const cartao of cartoes) ativarLerMais(cartao.item);
 }
 
 // Ordem: carteira → observação → destaques (os destaques usam as variações das duas primeiras)
