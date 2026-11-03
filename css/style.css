@@ -460,13 +460,61 @@ body {
 
 /* Início: Minha carteira, Em observação e Mercado, cada um no seu cartão
    (mesmo visual do cartão de cadastro), para as seções não ficarem "soltas" na página */
+/* Colunas da parte de baixo do Início: cada uma empilha os seus cartões.
+   No celular ficam uma embaixo da outra; no PC, lado a lado (bloco 10) */
+.coluna-principal,
+.coluna-lateral {
+  display: grid;
+  gap: calc(var(--espaco) * 2);
+  align-content: start;
+}
+
 .carteira,
 .observacao-inicio,
-.mercado {
+.mercado,
+.seus-ativos {
   padding: calc(var(--espaco) * 1.25);
   background: var(--superficie);
   border: 2px solid var(--linha);
   border-radius: 0.75rem;
+}
+
+/* "Por que seus ativos se mexeram": dois blocos separados (carteira e observação) */
+.subtitulo-seus-ativos {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--laranja);
+  margin: var(--espaco) 0 0.5rem;
+}
+
+.subtitulo-seus-ativos:first-of-type {
+  margin-top: 0;
+}
+
+.lista-explicacoes li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--linha);
+}
+
+.lista-explicacoes li:last-child {
+  border-bottom: none;
+}
+
+.explicacao-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espaco);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.lista-explicacoes .texto-explicacao {
+  font-size: 0.9375rem;
+}
+
+.seus-ativos .descricao {
+  color: var(--tinta-suave);
 }
 
 /* =========================================================
@@ -904,19 +952,6 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  /* Página Início, parte de baixo: duas colunas fixas
-     esquerda = Minha carteira e, embaixo dela, Em observação
-     direita  = Mercado (ocupa a altura das duas da esquerda) */
-  .carteira,
-  .observacao-inicio {
-    grid-column: 1;
-  }
-
-  .mercado {
-    grid-column: 2;
-    grid-row: 3 / span 2;
-    align-self: start;
-  }
 
   /* Na página Início, a coluna da direita é um pouco mais larga (cabe o Mercado sem apertar) */
   main.pagina-inicio {

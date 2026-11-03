@@ -14,12 +14,12 @@ const avisoCarteiraVazia = document.getElementById("inicio-carteira-vazia");
 const listaDestaques = document.getElementById("lista-destaques");
 const avisoDestaquesVazio = document.getElementById("destaques-vazio");
 
-// Variação do dia de cada ativo seu (carteira e observação), usada nos destaques
-const variacoesConhecidas = new Map();
+// Variação do dia dos SEUS ativos, separada por origem (usada em "Por que seus ativos se mexeram")
+const variacoesCarteira = [];
+const variacoesObservacao = [];
 function guardarVariacao(ativo, variacao, origem) {
-    if (!variacoesConhecidas.has(ativo.ativo)) {   // se está nos dois, vale "Na sua carteira"
-        variacoesConhecidas.set(ativo.ativo, { ativo: ativo.ativo, tipo: ativo.tipo, variacao, origem });
-    }
+    const lista = origem === "Na sua carteira" ? variacoesCarteira : variacoesObservacao;
+    lista.push({ ativo: ativo.ativo, tipo: ativo.tipo, variacao });
 }
 
 
@@ -59,8 +59,7 @@ function criarItemDestaque(posicao) {
         </article>
     `;
     item.querySelector("h3").textContent = posicao.ativo;
-    // Ex.: "Ação · Na sua carteira" ou "Ação · Destaque da bolsa"
-    item.querySelector(".tipo").textContent = `${posicao.tipo} · ${posicao.origem}`;
+    item.querySelector(".tipo").textContent = posicao.tipo;
     const variacao = item.querySelector(".variacao");
     variacao.textContent = `${formatarPercentual(posicao.variacao)} hoje`;
     pintarSinal(variacao, posicao.variacao);
@@ -190,26 +189,30 @@ async function carregarObservacaoInicio() {
     const lista = document.getElementById("inicio-observacao");
     let registros;
     try {
-        registros = (await buscarObservacao()).filter((r) => r.mostrar_inicio);
+        registros = await buscarObservacao();
     } catch (erro) {
         console.error("Falha ao carregar a observação:", erro);
         return;   // a seção continua escondida
     }
     if (registros.length === 0) return;
 
+    // Na lista "Em observação" só entram os marcados "Mostrar no Início";
+    // mas TODOS são cotados, para a explicação da IA na lateral
     const itens = new Map();
-    for (const registro of registros) {
+    for (const registro of registros.filter((r) => r.mostrar_inicio)) {
         // Mesmo formato da lista "Minha carteira", trocando "Valor atual" por "Preço"
         const item = criarItemCarteira({ ativo: registro.ativo, tipo: registro.tipo_ativo });
         item.querySelector("dt").textContent = "Preço";
         itens.set(registro.ativo, item);
         lista.appendChild(item);
     }
-    secao.hidden = false;
+    secao.hidden = itens.size === 0;
 
     const ativos = registros.map((r) => ({ ativo: r.ativo, tipo: r.tipo_ativo }));
     await cotarPosicoes(ativos, (ativo, cotacao) => {
+        if (typeof cotacao?.variacao === "number") guardarVariacao(ativo, cotacao.variacao, "Em observação");
         const item = itens.get(ativo.ativo);
+        if (!item) return;   // não está marcado para o Início: só guardamos a variação
         const campoValor = item.querySelector(".campo-valor");
         if (!cotacao || typeof cotacao.preco !== "number") {
             campoValor.textContent = "Sem cotação";
@@ -220,7 +223,6 @@ async function carregarObservacaoInicio() {
             const campoVariacao = item.querySelector(".campo-variacao");
             campoVariacao.textContent = `${formatarPercentual(cotacao.variacao)} hoje`;
             pintarSinal(campoVariacao, cotacao.variacao);
-            guardarVariacao(ativo, cotacao.variacao, "Em observação");
         }
     });
 }
@@ -230,25 +232,17 @@ async function carregarObservacaoInicio() {
 // 1º os SEUS (carteira e observação); se faltar, completa com as principais ações da bolsa
 // ---------------------------------------------------------
 async function carregarDestaques() {
-    // Os seus que já têm variação (guardados pela carteira e pela observação)
-    const pessoais = [...variacoesConhecidas.values()];
-
-    // Principais ações da bolsa (lista do js/comum.js), tirando as que já são suas
+    // Só as principais ações da bolsa (lista do js/comum.js): o "termômetro" do dia
+    const candidatos = ATIVOS_SUGERIDOS["Ação"].map((ativo) => ({ ativo: ativo, tipo: "Ação" }));
     const mercado = [];
-    if (pessoais.length < 3) {
-        const candidatos = ATIVOS_SUGERIDOS["Ação"]
-            .filter((ativo) => !variacoesConhecidas.has(ativo))
-            .map((ativo) => ({ ativo: ativo, tipo: "Ação" }));
-        await cotarPosicoes(candidatos, (ativo, cotacao) => {
-            if (typeof cotacao?.variacao === "number") {
-                mercado.push({ ...ativo, variacao: cotacao.variacao, origem: "Destaque da bolsa" });
-            }
-        });
-    }
+    await cotarPosicoes(candidatos, (ativo, cotacao) => {
+        if (typeof cotacao?.variacao === "number") {
+            mercado.push({ ...ativo, variacao: cotacao.variacao, origem: "Destaque da bolsa" });
+        }
+    });
 
-    // Math.abs ignora o sinal: -4% "mexeu mais" que +2%
-    const porMovimento = (a, b) => Math.abs(b.variacao) - Math.abs(a.variacao);
-    const destaques = [...pessoais.sort(porMovimento), ...mercado.sort(porMovimento)].slice(0, 3);
+    // As 3 que mais chamaram a atenção: maior movimento, para cima OU para baixo
+    const destaques = mercado.sort(porMovimento).slice(0, 3);
 
     if (destaques.length === 0) {
         avisoDestaquesVazio.textContent = "Não foi possível buscar os destaques agora. Tente recarregar mais tarde.";
@@ -268,7 +262,56 @@ async function carregarDestaques() {
     for (const cartao of cartoes) ativarLerMais(cartao.item);
 }
 
-// Ordem: carteira → observação → destaques (os destaques usam as variações das duas primeiras)
+// Math.abs ignora o sinal: -4% "mexeu mais" que +2%
+function porMovimento(a, b) {
+    return Math.abs(b.variacao) - Math.abs(a.variacao);
+}
+
+
+// ---------------------------------------------------------
+// Lateral: "Por que seus ativos se mexeram"
+// Até 3 da carteira e até 3 da observação (os que mais se mexeram), em blocos separados
+// ---------------------------------------------------------
+const MAXIMO_EXPLICACOES = 3;   // limite por bloco, para poupar o limite grátis da IA
+
+async function preencherBlocoExplicacoes(variacoes, idLista, idAviso, textoVazio) {
+    const lista = document.getElementById(idLista);
+    const aviso = document.getElementById(idAviso);
+    const escolhidos = [...variacoes].sort(porMovimento).slice(0, MAXIMO_EXPLICACOES);
+
+    if (escolhidos.length === 0) {
+        aviso.textContent = textoVazio;
+        return;
+    }
+    aviso.hidden = true;
+
+    // Um por vez (for + await): a IA recebe os pedidos espaçados, e cada texto aparece assim que fica pronto
+    for (const ativo of escolhidos) {
+        const item = document.createElement("li");
+        item.innerHTML = `
+            <p class="explicacao-cabecalho"><span class="nome"></span><span class="variacao"></span></p>
+            <p class="texto-explicacao resumida">Buscando o motivo…</p>
+            <button type="button" class="botao-ler-mais" aria-expanded="false" hidden>Ler mais</button>
+        `;
+        item.querySelector(".nome").textContent = ativo.ativo;
+        const variacao = item.querySelector(".variacao");
+        variacao.textContent = formatarPercentual(ativo.variacao);
+        pintarSinal(variacao, ativo.variacao);
+        lista.appendChild(item);
+
+        await preencherExplicacao(item.querySelector(".texto-explicacao"), ativo);
+        ativarLerMais(item);
+    }
+}
+
+async function carregarExplicacoesPessoais() {
+    await preencherBlocoExplicacoes(variacoesCarteira, "explicacoes-carteira", "explicacoes-carteira-vazia",
+        "Nenhum ativo da carteira com cotação hoje. Cadastre compras na Carteira.");
+    await preencherBlocoExplicacoes(variacoesObservacao, "explicacoes-observacao", "explicacoes-observacao-vazia",
+        "Nenhum ativo na observação com cotação hoje. Adicione ativos na página Observação.");
+}
+
+// Ordem: carteira → observação (guardam as variações) → destaques da bolsa e a lateral, ao mesmo tempo
 carregarInicio()
     .then(carregarObservacaoInicio)
-    .then(carregarDestaques);
+    .then(() => Promise.all([carregarDestaques(), carregarExplicacoesPessoais()]));

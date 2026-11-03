@@ -66,18 +66,20 @@
     <section class="destaques" aria-labelledby="titulo-destaques">
       <h2 id="titulo-destaques">Em destaque hoje</h2>
       <p class="descricao">
-        Os ativos que mais se movimentaram hoje: primeiro os seus (carteira e observação),
-        completando com as principais ações da bolsa. O motivo é explicado por IA a partir
-        das notícias do dia; a IA pode errar, confira a fonte citada.
+        As ações da bolsa que mais chamaram a atenção hoje, com o motivo explicado por IA
+        a partir das notícias do dia. A IA pode errar: confira a fonte citada.
       </p>
 
-      <!-- Preenchida pelo js/inicio.js: os 3 ativos com maior variação do dia (seus primeiro, depois a bolsa) -->
+      <!-- Preenchida pelo js/inicio.js: as 3 maiores altas ou quedas entre as principais ações da bolsa -->
       <ul class="lista-destaques" id="lista-destaques"></ul>
       <!-- Aparece enquanto as cotações e a IA carregam; os 3 pontinhos piscam em sequência (CSS) -->
       <p class="descricao carregando" id="destaques-vazio" role="status">
         Analisando os ativos em destaque hoje<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
       </p>
     </section>
+
+    <!-- Coluna principal (esquerda no PC): carteira e observação -->
+    <div class="coluna-principal">
 
     <!-- Carteira: cada ativo que eu tenho -->
     <section class="carteira" aria-labelledby="titulo-carteira">
@@ -95,6 +97,11 @@
       <ul class="lista-ativos" id="inicio-observacao"></ul>
       <p><a class="link-carteira" href="observacao.html">Ver lista completa →</a></p>
     </section>
+
+    </div>
+
+    <!-- Coluna lateral (direita no PC): mercado e o "por que se mexeu" dos SEUS ativos -->
+    <aside class="coluna-lateral">
 
     <!-- Mercado: termômetro geral -->
     <section class="mercado" aria-labelledby="titulo-mercado">
@@ -133,6 +140,21 @@
       </ul>
       <p class="nota-mercado">Ibovespa e S&amp;P 500: valor e variação do dia, com cerca de 30 min de atraso.</p>
     </section>
+
+    <!-- Seus ativos hoje: explicação da IA para até 3 da carteira e até 3 da observação (js/inicio.js) -->
+    <section class="seus-ativos" aria-labelledby="titulo-seus-ativos">
+      <h2 id="titulo-seus-ativos">Por que seus ativos se mexeram</h2>
+
+      <h3 class="subtitulo-seus-ativos">Da sua carteira</h3>
+      <ul class="lista-explicacoes" id="explicacoes-carteira"></ul>
+      <p class="descricao" id="explicacoes-carteira-vazia">Analisando…</p>
+
+      <h3 class="subtitulo-seus-ativos">Da sua observação</h3>
+      <ul class="lista-explicacoes" id="explicacoes-observacao"></ul>
+      <p class="descricao" id="explicacoes-observacao-vazia">Analisando…</p>
+    </section>
+
+    </aside>
 
   </main>
 
