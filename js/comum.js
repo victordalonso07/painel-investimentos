@@ -47,6 +47,16 @@ function pintarSinal(elemento, valor) {
 }
 
 
+// Os 3 pontinhos animados de "carregando" (a animação está no CSS, classe .pontinhos)
+const PONTINHOS = `<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>`;
+
+// Escreve um texto de carregando com os pontinhos animados: mostrarCarregando(el, "Carregando histórico")
+// O texto entra com textContent (seguro); só os pontinhos, que são fixos, entram como HTML
+function mostrarCarregando(elemento, texto) {
+    elemento.textContent = texto;
+    elemento.insertAdjacentHTML("beforeend", PONTINHOS);
+}
+
 // Mostra a hora da última atualização no topo da página ("Atualizado às 14:05")
 function mostrarHorario() {
     const elemento = document.getElementById("horario-atualizacao");

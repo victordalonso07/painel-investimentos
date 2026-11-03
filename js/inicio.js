@@ -32,7 +32,7 @@ function criarItemCarteira(posicao) {
             <p class="tipo"></p>
             <dl>
                 <dt>Valor atual</dt>
-                <dd class="campo-valor">Carregando…</dd>
+                <dd class="campo-valor">Carregando${PONTINHOS}</dd>
                 <dt>Variação</dt>
                 <dd class="campo-variacao">—</dd>
             </dl>
@@ -53,7 +53,7 @@ function criarItemDestaque(posicao) {
             <p class="variacao"></p>
             <div class="explicacao">
                 <p class="explicacao-titulo">Por que se mexeu</p>
-                <p class="texto-explicacao resumida">Buscando o motivo…</p>
+                <p class="texto-explicacao resumida">Buscando o motivo${PONTINHOS}</p>
                 <button type="button" class="botao-ler-mais" aria-expanded="false" hidden>Ler mais</button>
             </div>
         </article>
@@ -274,41 +274,54 @@ function porMovimento(a, b) {
 // ---------------------------------------------------------
 const MAXIMO_EXPLICACOES = 3;   // limite por bloco, para poupar o limite grátis da IA
 
-async function preencherBlocoExplicacoes(variacoes, idLista, idAviso, textoVazio) {
+// Monta um bloco (carteira OU observação) e devolve as "promessas" das explicações.
+// Não espera aqui: quem chama espera as dos DOIS blocos juntas
+function montarBlocoExplicacoes(variacoes, idLista, idAviso, textoVazio) {
     const lista = document.getElementById(idLista);
     const aviso = document.getElementById(idAviso);
     const escolhidos = [...variacoes].sort(porMovimento).slice(0, MAXIMO_EXPLICACOES);
 
     if (escolhidos.length === 0) {
         aviso.textContent = textoVazio;
-        return;
+        aviso.hidden = false;
+        return [];
     }
-    aviso.hidden = true;
 
-    // Um por vez (for + await): a IA recebe os pedidos espaçados, e cada texto aparece assim que fica pronto
-    for (const ativo of escolhidos) {
+    return escolhidos.map((ativo) => {
         const item = document.createElement("li");
         item.innerHTML = `
             <p class="explicacao-cabecalho"><span class="nome"></span><span class="variacao"></span></p>
-            <p class="texto-explicacao resumida">Buscando o motivo…</p>
+            <p class="texto-explicacao resumida"></p>
             <button type="button" class="botao-ler-mais" aria-expanded="false" hidden>Ler mais</button>
         `;
         item.querySelector(".nome").textContent = ativo.ativo;
         const variacao = item.querySelector(".variacao");
         variacao.textContent = formatarPercentual(ativo.variacao);
         pintarSinal(variacao, ativo.variacao);
-        lista.appendChild(item);
+        lista.appendChild(item);   // está dentro do bloco escondido: ainda não aparece na tela
 
-        await preencherExplicacao(item.querySelector(".texto-explicacao"), ativo);
-        ativarLerMais(item);
-    }
+        // Quando a explicação chegar, devolve o item (para ativar o "Ler mais" depois)
+        return preencherExplicacao(item.querySelector(".texto-explicacao"), ativo).then(() => item);
+    });
 }
 
 async function carregarExplicacoesPessoais() {
-    await preencherBlocoExplicacoes(variacoesCarteira, "explicacoes-carteira", "explicacoes-carteira-vazia",
-        "Nenhum ativo da carteira com cotação hoje. Cadastre compras na Carteira.");
-    await preencherBlocoExplicacoes(variacoesObservacao, "explicacoes-observacao", "explicacoes-observacao-vazia",
-        "Nenhum ativo na observação com cotação hoje. Adicione ativos na página Observação.");
+    const promessas = [
+        ...montarBlocoExplicacoes(variacoesCarteira, "explicacoes-carteira", "explicacoes-carteira-vazia",
+            "Nenhum ativo da carteira com cotação hoje. Cadastre compras na Carteira."),
+        ...montarBlocoExplicacoes(variacoesObservacao, "explicacoes-observacao", "explicacoes-observacao-vazia",
+            "Nenhum ativo na observação com cotação hoje. Adicione ativos na página Observação."),
+    ];
+
+    // Mesmo padrão dos destaques: espera TODAS as explicações (dos dois blocos) ficarem prontas
+    const itens = await Promise.all(promessas);
+
+    // Tudo pronto: tira o "Analisando seus ativos..." e mostra o conteúdo de uma vez
+    document.getElementById("seus-ativos-carregando").hidden = true;
+    document.getElementById("seus-ativos-conteudo").hidden = false;
+
+    // Só agora os textos estão visíveis e dá para medir se precisam do "Ler mais"
+    for (const item of itens) ativarLerMais(item);
 }
 
 // Ordem: carteira → observação (guardam as variações) → destaques da bolsa e a lateral, ao mesmo tempo

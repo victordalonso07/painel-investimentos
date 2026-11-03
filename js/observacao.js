@@ -41,7 +41,7 @@ function criarItemObservacao(registro) {
                 <p class="tipo"></p>
             </div>
             <dl>
-                <div><dt>Preço atual</dt><dd class="campo-preco">Carregando…</dd></div>
+                <div><dt>Preço atual</dt><dd class="campo-preco">Carregando${PONTINHOS}</dd></div>
                 <div><dt>Variação hoje</dt><dd class="campo-variacao">—</dd></div>
             </dl>
             <div class="acoes-item">

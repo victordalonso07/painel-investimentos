@@ -48,17 +48,17 @@
       <!-- Valores reais: o js/inicio.js calcula a partir da carteira salva no banco -->
       <div class="cartao-resumo">
         <p class="rotulo">Patrimônio total</p>
-        <p class="valor" id="resumo-patrimonio">Carregando…</p>
+        <p class="valor" id="resumo-patrimonio">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></p>
       </div>
 
       <div class="cartao-resumo">
         <p class="rotulo">Hoje</p>
-        <p class="valor" id="resumo-hoje">Carregando…</p>
+        <p class="valor" id="resumo-hoje">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></p>
       </div>
 
       <div class="cartao-resumo">
         <p class="rotulo">Rendimento total</p>
-        <p class="valor" id="resumo-rendimento">Carregando…</p>
+        <p class="valor" id="resumo-rendimento">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></p>
       </div>
     </section>
 
@@ -112,28 +112,28 @@
         <li>
           <span class="indicador-nome">Ibovespa <small id="ibovespa-fonte"></small></span>
           <span class="indicador-dados">
-            <span id="ibovespa-valor">Carregando…</span>
+            <span id="ibovespa-valor">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
             <span id="ibovespa-variacao" class="variacao-pequena"></span>
           </span>
         </li>
         <li>
           <span class="indicador-nome">S&amp;P 500 <small id="sp500-fonte"></small></span>
           <span class="indicador-dados">
-            <span id="sp500-valor">Carregando…</span>
+            <span id="sp500-valor">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
             <span id="sp500-variacao" class="variacao-pequena"></span>
           </span>
         </li>
         <li>
           <span class="indicador-nome">Dólar comercial</span>
           <span class="indicador-dados">
-            <span id="dolar-valor">Carregando…</span>
+            <span id="dolar-valor">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
             <span id="dolar-variacao" class="variacao-pequena"></span>
           </span>
         </li>
         <li>
           <span class="indicador-nome">Bitcoin</span>
           <span class="indicador-dados">
-            <span id="bitcoin-valor">Carregando…</span>
+            <span id="bitcoin-valor">Carregando<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span>
             <span id="bitcoin-variacao" class="variacao-pequena"></span>
           </span>
         </li>
@@ -145,13 +145,21 @@
     <section class="seus-ativos" aria-labelledby="titulo-seus-ativos">
       <h2 id="titulo-seus-ativos">Por que seus ativos se mexeram</h2>
 
-      <h3 class="subtitulo-seus-ativos">Da sua carteira</h3>
-      <ul class="lista-explicacoes" id="explicacoes-carteira"></ul>
-      <p class="descricao" id="explicacoes-carteira-vazia">Analisando…</p>
+      <!-- Aparece enquanto a IA analisa; some quando TODAS as explicações ficarem prontas -->
+      <p class="descricao carregando" id="seus-ativos-carregando" role="status">
+        Analisando seus ativos<span class="pontinhos" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
+      </p>
 
-      <h3 class="subtitulo-seus-ativos">Da sua observação</h3>
-      <ul class="lista-explicacoes" id="explicacoes-observacao"></ul>
-      <p class="descricao" id="explicacoes-observacao-vazia">Analisando…</p>
+      <!-- Escondido até tudo carregar; aí aparece de uma vez -->
+      <div id="seus-ativos-conteudo" hidden>
+        <h3 class="subtitulo-seus-ativos">Da sua carteira</h3>
+        <ul class="lista-explicacoes" id="explicacoes-carteira"></ul>
+        <p class="descricao" id="explicacoes-carteira-vazia" hidden></p>
+
+        <h3 class="subtitulo-seus-ativos">Da sua observação</h3>
+        <ul class="lista-explicacoes" id="explicacoes-observacao"></ul>
+        <p class="descricao" id="explicacoes-observacao-vazia" hidden></p>
+      </div>
     </section>
 
     </aside>

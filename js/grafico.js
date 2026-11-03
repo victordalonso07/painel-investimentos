@@ -105,7 +105,7 @@ async function desenharGrafico(periodo) {
         botao.setAttribute("aria-pressed", String(botao.dataset.periodo === periodo.id));
     }
 
-    status.textContent = "Carregando histórico…";
+    mostrarCarregando(status, "Carregando histórico");
     variacao.textContent = "";
     graficoAtual?.destroy();   // apaga o desenho anterior
     graficoAtual = null;

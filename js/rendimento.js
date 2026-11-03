@@ -23,9 +23,9 @@ function criarItemPosicao(posicao) {
                 <div><dt>Quantidade</dt><dd class="campo-quantidade"></dd></div>
                 <div><dt>Preço médio</dt><dd class="campo-preco-medio"></dd></div>
                 <div><dt>Total investido</dt><dd class="campo-investido"></dd></div>
-                <div><dt>Preço atual</dt><dd class="campo-preco-atual">Carregando…</dd></div>
-                <div><dt>Valor atual</dt><dd class="campo-valor-atual">Carregando…</dd></div>
-                <div><dt>Resultado</dt><dd class="campo-resultado">Carregando…</dd></div>
+                <div><dt>Preço atual</dt><dd class="campo-preco-atual">Carregando${PONTINHOS}</dd></div>
+                <div><dt>Valor atual</dt><dd class="campo-valor-atual">Carregando${PONTINHOS}</dd></div>
+                <div><dt>Resultado</dt><dd class="campo-resultado">Carregando${PONTINHOS}</dd></div>
             </dl>
         </article>
     `;
@@ -59,7 +59,7 @@ async function atualizarPosicoes(operacoes, listaPosicoes, resumoCarteira) {
     }
 
     const totalInvestido = posicoes.reduce((soma, p) => soma + p.custo, 0);
-    resumoCarteira.textContent = `Total investido: ${formatarReais(totalInvestido)}. Buscando cotações…`;
+    mostrarCarregando(resumoCarteira, `Total investido: ${formatarReais(totalInvestido)}. Buscando cotações`);
 
     let valorAtualTotal = 0;
     let semCotacao = 0;

@@ -432,7 +432,8 @@ body {
 
 /* "Analisando os ativos em destaque hoje..." com os pontinhos aparecendo um de cada vez */
 /* ".destaques .carregando" (2 classes) vence ".destaques .descricao", que deixava o texto cinza */
-.destaques .carregando {
+.destaques .carregando,
+.seus-ativos .carregando {
   display: inline-block;
   font-weight: 700;
   color: var(--laranja);              /* texto laranja, não cinza como as descrições */
@@ -513,8 +514,18 @@ body {
   font-size: 0.9375rem;
 }
 
-.seus-ativos .descricao {
+.seus-ativos .descricao:not(.carregando) {
   color: var(--tinta-suave);
+}
+
+/* Enquanto analisa, a caixa já fica grande: a mensagem ocupa a largura toda, centralizada */
+.seus-ativos .carregando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 14rem;
+  text-align: center;
 }
 
 /* =========================================================
