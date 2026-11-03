@@ -97,9 +97,18 @@ async function preencherExplicacao(elemento, posicao) {
     // Até 2 tentativas: se a IA estiver ocupada na primeira, espera 2 s e tenta de novo
     for (let tentativa = 1; tentativa <= 2; tentativa++) {
         try {
-            const dados = await buscarJSON(endereco);
-            elemento.textContent = dados.explicacao;   // textContent: o texto da IA nunca vira código
-            return;
+            const resposta = await fetch(endereco);
+            if (resposta.ok) {
+                const dados = await resposta.json();
+                elemento.textContent = dados.explicacao;   // textContent: o texto da IA nunca vira código
+                return;
+            }
+            // 429 = limite grátis da IA: tentar de novo agora só gastaria mais. Para aqui
+            if (resposta.status === 429) {
+                elemento.textContent = "A IA atingiu o limite gratuito por agora. As explicações voltam mais tarde.";
+                return;
+            }
+            throw new Error(`/api/explicacao respondeu ${resposta.status}`);
         } catch (erro) {
             console.error(`Falha ao buscar a explicação de ${posicao.ativo} (tentativa ${tentativa}):`, erro);
             if (tentativa === 1) await new Promise((esperar) => setTimeout(esperar, 2000));

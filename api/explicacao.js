@@ -10,6 +10,16 @@ function responderErro(mensagem, status) {
 
 // Modelo do Gemini (plano grátis). Se o Google trocar o nome, é só mudar aqui
 const MODELO = "gemini-3.6-flash";
+// Modelo reserva: mais leve e com limite grátis maior. Usado se o principal estiver no limite ou fora do ar
+const MODELO_RESERVA = "gemini-3.5-flash-lite";
+
+// Erro com o código HTTP junto, para a resposta da API dizer o motivo certo (ex.: 429 = limite)
+class ErroIA extends Error {
+    constructor(mensagem, status) {
+        super(mensagem);
+        this.status = status;
+    }
+}
 
 // Regras que a IA segue SEMPRE (o "prompt de sistema")
 const REGRAS = `
@@ -75,40 +85,45 @@ async function buscarNoticias(ativo) {
 
 
 // Manda as regras + a pergunta para o Gemini e devolve o texto da resposta
+// Manda as regras + a pergunta para o Gemini e devolve o texto da resposta.
+// Tenta o modelo principal; se ele estiver no limite (429), sobrecarregado (503) ou não existir (404), tenta o reserva
 async function perguntarIA(pergunta) {
     const chave = process.env.GEMINI_API_KEY;   // pega a chave no cofre da Vercel
     if (!chave) {
-        throw new Error("A variável GEMINI_API_KEY não está configurada na Vercel.");
+        throw new ErroIA("A variável GEMINI_API_KEY não está configurada na Vercel.", 500);
     }
 
-    const endereco = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
+    let ultimoErro;
+    for (const modelo of [MODELO, MODELO_RESERVA]) {
+        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": chave,   // a chave vai no cabeçalho, nunca no endereço
+            },
+            body: JSON.stringify({
+                system_instruction: { parts: [{ text: REGRAS }] },   // as regras fixas
+                contents: [{ parts: [{ text: pergunta }] }],         // a pergunta do dia
+                generationConfig: { temperature: 0.3 },              // 0.3 = mais objetiva, menos "criativa"
+            }),
+        });
 
-    const resposta = await fetch(endereco, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": chave,   // a chave vai no cabeçalho, nunca no endereço
-        },
-        body: JSON.stringify({
-            system_instruction: { parts: [{ text: REGRAS }] },   // as regras fixas
-            contents: [{ parts: [{ text: pergunta }] }],         // a pergunta do dia
-            generationConfig: { temperature: 0.3 },              // 0.3 = mais objetiva, menos "criativa"
-        }),
-    });
+        if (resposta.ok) {
+            const dados = await resposta.json();
+            // A resposta vem "embrulhada": candidates → content → parts → text
+            const texto = dados.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
+            if (texto) return texto;
+            ultimoErro = new ErroIA("Gemini não devolveu texto.", 502);
+            continue;
+        }
 
-    if (!resposta.ok) {
-        // O detalhe do erro fica só no registro do servidor (pode conter dados internos)
-        console.error("Gemini respondeu com erro:", resposta.status, await resposta.text());
-        throw new Error(`Gemini respondeu ${resposta.status}`);
+        // O detalhe do erro fica só no registro do servidor (aba Logs da Vercel)
+        console.error(`Gemini (${modelo}) respondeu com erro:`, resposta.status, await resposta.text());
+        ultimoErro = new ErroIA(`Gemini respondeu ${resposta.status}`, resposta.status);
+        // Só vale tentar o reserva nesses casos; chave errada (400/403), por exemplo, falharia igual
+        if (![429, 503, 404].includes(resposta.status)) break;
     }
-
-    const dados = await resposta.json();
-    // A resposta vem "embrulhada": candidates → content → parts → text
-    const texto = dados.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
-    if (!texto) {
-        throw new Error("Gemini não devolveu texto.");
-    }
-    return texto;
+    throw ultimoErro;
 }
 
 
@@ -144,6 +159,10 @@ export default {
             );
         } catch (erro) {
             console.error("Falha ao gerar a explicação:", erro);
+            // 429: os dois modelos estão no limite grátis. Avisa o site para mostrar a mensagem certa
+            if (erro.status === 429) {
+                return responderErro("A IA atingiu o limite gratuito por agora.", 429);
+            }
             return responderErro("Explicação indisponível no momento.", 502);
         }
     },
