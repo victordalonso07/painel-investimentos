@@ -8,6 +8,29 @@ function responderErro(mensagem, status) {
     return Response.json({ erro: mensagem }, { status: status });
 }
 
+// Modelo do Gemini (plano grátis). Se o Google trocar o nome, é só mudar aqui
+const MODELO = "gemini-3.6-flash";
+
+// Regras que a IA segue SEMPRE (o "prompt de sistema")
+const REGRAS = `
+Você explica o mercado financeiro para um investidor iniciante, em português do Brasil.
+Explique em no máximo 3 frases curtas por que o ativo se mexeu hoje.
+Use linguagem simples: se usar um termo técnico (ex.: Opep, Selic, dividendo), explique em poucas palavras.
+Os FATOS precisam vir das notícias recebidas; você pode usar seu conhecimento só para explicar conceitos e ligar causa e efeito.
+Nunca invente fatos, números ou acontecimentos que não estejam nas notícias.
+Se as notícias não explicarem o movimento, diga isso com honestidade (ex.: "Não há notícia específica hoje; o ativo acompanhou o mercado em geral").
+Não faça previsões e não recomende comprar, vender ou manter.
+Termine com a fonte principal entre parênteses, ex.: (Fonte: InfoMoney).
+`;
+
+// Monta a pergunta do dia: ativo, variação e a lista de manchetes
+function montarPergunta(ativo, variacao, noticias) {
+    const lista = noticias.length > 0
+        ? noticias.map((n) => `- ${n.titulo} [${n.fonte}]`).join("\n")
+        : "(nenhuma notícia encontrada)";
+    return `Ativo: ${ativo}\nVariação hoje: ${variacao}%\n\nNotícias de hoje:\n${lista}`;
+}
+
 // O RSS troca alguns símbolos por códigos (ex.: "&amp;" no lugar de "&"). Aqui desfazemos isso
 function limparTexto(texto) {
     return texto
